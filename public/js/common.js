@@ -140,25 +140,6 @@ $(document).ready(function () {
 
     __currency_convert_recursively($(document), $('input#p_symbol').length);
 
-    // Simple function to remove currency symbol and HTML tags from string
-    function __remove_currency_symbol(str) {
-        // DataTables can pass numbers, objects, null - convert all to string
-        if (typeof str !== 'string') {
-            str = String(str);
-        }
-        
-        // HTML REMOVAL: Simple regex to remove HTML tags
-        str = str.replace(/<[^>]*>/g, ''); 
-        
-        // Check 1: Variable exists, Check 2: Has value, Check 3: Symbol present in string
-        if (typeof __currency_symbol !== 'undefined' && __currency_symbol && str.includes(__currency_symbol)) {
-            // SIMPLE REPLACEMENT: Replace all occurrences of currency symbol with empty string
-            str = str.split(__currency_symbol).join('');  
-        }
-        
-        return str.trim();
-    }
-
     var buttons = [
         // {
         //     extend: 'copy',
@@ -175,23 +156,6 @@ $(document).ready(function () {
             className: 'tw-dw-btn-xs  tw-dw-btn tw-dw-btn-outline tw-my-2',
             exportOptions: {
                 columns: ':visible',
-                format: {
-                    body: function(data, row, column, node) {
-                        // Check if the node or its children have data-is_quantity="true"
-                        var $node = $(node);
-                        var $quantityElement = $node.find('[data-is_quantity="true"]');
-                        
-                        if ($quantityElement.length > 0) {
-                            return $quantityElement.attr('data-orig-value');
-                        }
-                        // Remove currency symbol from the cell data
-                        return __remove_currency_symbol(data);
-                    },
-                    footer: function(data, row, column, node) {
-                        // Remove currency symbol from the footer data
-                        return __remove_currency_symbol(data);
-                    }
-                }
             },
             footer: true,
         },
@@ -201,22 +165,6 @@ $(document).ready(function () {
             className: 'tw-dw-btn-xs  tw-dw-btn tw-dw-btn-outline tw-my-2',
             exportOptions: {
                 columns: ':visible',
-                format: {
-                    body: function(data, row, column, node) {
-                        // Check if the node or its children have data-is_quantity="true"
-                        var $node = $(node);
-                        var $quantityElement = $node.find('[data-is_quantity="true"]');
-                        if ($quantityElement.length > 0) {
-                            return $quantityElement.attr('data-orig-value');
-                        }
-                        // Remove currency symbol from the cell data
-                        return __remove_currency_symbol(data);
-                    },
-                    footer: function(data, row, column, node) {
-                        // Remove currency symbol from the footer data
-                        return __remove_currency_symbol(data);
-                    }
-                }
             },
             footer: true,
         },
@@ -270,7 +218,7 @@ $(document).ready(function () {
         //Uncomment below line to enable save state of datatable.
         //stateSave: true,
         fixedHeader: true,
-        dom: '<"row margin-bottom-20 text-center"<"col-sm-1"l><"col-sm-8"B><"col-sm-3"f> r>tip',
+        dom: '<"row margin-bottom-20"<"col-sm-3 text-left"f><"col-sm-1"l><"col-sm-8 text-center"B>r>tip',
         buttons: buttons,
         aLengthMenu: [
             [25, 50, 100, 200, 500, 1000, -1],
@@ -384,8 +332,6 @@ ranges[LANG.last_financial_year] = [
 ];
 
 var dateRangeSettings = {
-    showDropdowns : true,
-    linkedCalendars : false,
     ranges: ranges,
     startDate: financial_year.start,
     endDate: financial_year.end,
@@ -398,7 +344,7 @@ var dateRangeSettings = {
     },
 };
 
-//Check for number string in input field, if data-decimal is 0 then don't allow decimal symbol and if no_neg then don't allow  negative value
+//Check for number string in input field, if data-decimal is 0 then don't allow decimal symbol
 $(document).on('keypress', 'input.input_number', function (event) {
     var is_decimal = $(this).data('decimal');
 
@@ -410,11 +356,6 @@ $(document).on('keypress', 'input.input_number', function (event) {
         }
     } else {
         var regex = new RegExp(/^[0-9.,-]+$/);
-    }
-
-    // Check for no negative values
-    if(is_decimal == 'no_neg'){
-        var regex = new RegExp(/^[0-9.,]+$/);
     }
 
     var key = String.fromCharCode(!event.charCode ? event.which : event.charCode);
@@ -578,11 +519,8 @@ $(document).on('shown.bs.modal', '.contains_select2, .view_modal', function () {
 });
 
 //common configuration : tinyMCE editor
-
 tinymce.overrideDefaults({
     height: 300,
-    language: app_locale, // Set language dynamically
-    language_url: base_path + '/js/lang/tiny/' + app_locale + '.js', // Dynamic URL
     theme: 'silver',
     plugins: [
         'advlist autolink link image lists charmap print preview hr anchor pagebreak',
@@ -601,7 +539,7 @@ tinymce.overrideDefaults({
 
 // Prevent Bootstrap dialog from blocking focusin
 $(document).on('focusin', function (e) {
-    if ($(e.target).closest('.tox-tinymce-aux, .moxman-window, .tam-assetmanager-root, .select2-container').length) {
+    if ($(e.target).closest('.tox-tinymce-aux, .moxman-window, .tam-assetmanager-root').length) {
         e.stopImmediatePropagation();
     }
 });
@@ -692,15 +630,4 @@ function copyToClipboard(element_id) {
     document.execCommand('copy');
     temp.remove();
     toastr.success(LANG.copied_to_clipboard);
-}
-
-// This function escapes HTML characters in a given string to prevent XSS attacks.
-function escapeHtml(str) {
-    if (typeof str !== 'string') return '';
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
 }

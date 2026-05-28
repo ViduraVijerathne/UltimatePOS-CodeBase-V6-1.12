@@ -276,7 +276,17 @@ legend {
 .btn-login {
   padding: 6px 52px !important;
 }
+/* .right-col {
+  background-color: #243949;
+  height: 100%;
+  min-height: 100vh;
+} */
 
+/* Background color added by Prashant */
+.right-col {
+  background: linear-gradient(to right, #6366f1, #3b82f6);
+  height: 100%;
+}
 
 /* .right-col label {
   color: #fff;
@@ -1016,53 +1026,4 @@ table.table-text-center td, table.table-text-center th{
 }
 .jstree-hovered .tree-actions {
   display: inherit;
-}
-
-/* Variation Table Column Widths */
-.variation_value_table th:nth-child(3),
-.variation_value_table td:nth-child(3) {
-  min-width: 200px;
-}
-
-/* Variation Image Upload Styles */
-.variation-image-cell {
-  width: 50px;
-  min-width: 50px;
-  max-width: 60px;
-  text-align: center;
-}
-.variation-image-upload {
-  position: relative;
-}
-.variation-upload-btn {
-  position: relative;
-  min-width: 36px;
-}
-.variation-upload-btn .image-count-badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #ff6b6b;
-  color: white;
-  border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  font-size: 10px;
-  line-height: 18px;
-  text-align: center;
-}
-.variation-image-preview {
-  max-width: 200px;
-}
-.variation-image-preview .preview-thumb img {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-.existing-images .img-thumbnail {
-  max-width: 50px;
-  max-height: 50px;
-  overflow: hidden;
-}
-.existing-images .img-thumbnail img {
-  width: 100%;
-  height: auto;
 }

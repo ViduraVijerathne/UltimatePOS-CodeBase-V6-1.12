@@ -91,7 +91,6 @@
             table_report = $('#table_report').DataTable({
                             processing: true,
                             serverSide: true,
-                            fixedHeader:false,
                             "ajax": {
                                 "url": "/reports/table-report",
                                 "data": function ( d ) {

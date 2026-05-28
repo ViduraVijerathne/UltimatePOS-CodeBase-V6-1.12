@@ -20,7 +20,7 @@
                             <span class="input-group-addon">
                                 <i class="fa fa-user"></i>
                             </span>
-                            {!! Form::select('supplier_id', $suppliers, null, ['class' => 'form-control select2', 'placeholder' => __('messages.please_select'), 'required', 'id' => 'gst_report_supplier_filter', 'style' => 'width:100%']); !!}
+                            {!! Form::select('supplier_id', $suppliers, null, ['class' => 'form-control select2', 'placeholder' => __('messages.please_select'), 'required', 'id' => 'gst_report_supplier_filter']); !!}
                         </div>
                     </div>
                 </div>
@@ -107,7 +107,6 @@
                 scrollY: "75vh",
                 scrollX:        true,
                 scrollCollapse: true,
-                fixedHeader:false,
                 ajax: {
                     url: '/reports/gst-purchase-report',
                     data: function(d) {

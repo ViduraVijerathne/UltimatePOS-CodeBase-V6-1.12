@@ -30,7 +30,4 @@
      'purchase_sell_mismatch_exception' => 'ERROR: NO PERMITIDO: desajuste entre la cantidad vendida y la compra. Producto: :product',
      'purchase_stock_adjustment_mismatch_exception' => 'ERROR: NO PERMITIDO: desajuste entre el ajuste de stock y la cantidad de compra. Producto: :product',
      'transaction_edit_not_allowed' => 'No se permite la edición de transacciones después de :days días.',
-     'print_detailed' => 'Imprimir Detallado',
-    'print_mini' => 'Imprimir Mini',
-    'opening' => 'Apertura',
  ];

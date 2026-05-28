@@ -1,10 +1,4 @@
 <h3 class="text-muted mb-0">
-    @lang('lang_v1.cogs') <span class="display_currency" data-currency_symbol="true"> {{ (($data['opening_stock'] + $data['total_purchase']) - $data['closing_stock']) }}</span>
-</h3>
-    <small class="help-block">
-        @lang('lang_v1.cogs_help_text')
-    </small>
-<h3 class="text-muted mb-0">
     {{ __('lang_v1.gross_profit') }}: 
     <span class="display_currency" data-currency_symbol="true">{{$data['gross_profit']}}</span>
 </h3>

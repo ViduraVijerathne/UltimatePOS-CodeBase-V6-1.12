@@ -74,7 +74,7 @@
           <th>#</th>
           <th>@lang('sale.product')</th>
           <th>@lang('sale.qty')</th>
-          <th class="show_price_with_permission">@lang('sale.subtotal')</th>
+          <th>@lang('sale.subtotal')</th>
         </tr>
         @php 
           $total = 0.00;
@@ -101,7 +101,7 @@
                @endif
             </td>
             <td>{{ @format_quantity($sell_lines->quantity) }} {{$sell_lines->product->unit->short_name ?? ""}}</td>
-            <td class="show_price_with_permission">
+            <td>
               <span class="display_currency" data-currency_symbol="true">{{ $sell_lines->unit_price_inc_tax * $sell_lines->quantity }}</span>
             </td>
           </tr>
@@ -118,9 +118,9 @@
   
   <div class="col-xs-6">
     <div class="table-responsive">
-      <table class="table show_price_with_permission">
+      <table class="table">
         <tr>
-          <th >@lang('purchase.net_total_amount'): </th>
+          <th>@lang('purchase.net_total_amount'): </th>
           <td></td>
           <td><span class="display_currency pull-right" data-currency_symbol="true">{{ $total }}</span></td>
         </tr>

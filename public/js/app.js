@@ -85,7 +85,6 @@ $(document).ready(function() {
     var brands_table = $('#brands_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         ajax: '/brands',
         columnDefs: [
             {
@@ -163,7 +162,6 @@ $(document).ready(function() {
     var tax_rates_table = $('#tax_rates_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         ajax: '/tax-rates',
         columnDefs: [
             {
@@ -269,7 +267,6 @@ $(document).ready(function() {
     var units_table = $('#unit_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         ajax: '/units',
         columnDefs: [
             {
@@ -407,9 +404,6 @@ $(document).ready(function() {
             { data: 'action', searchable: false, orderable: false },
             { data: 'contact_id', name: 'contact_id' },
             { data: 'supplier_business_name', name: 'supplier_business_name' },
-            { data: 'name', name: 'name' },
-            { data: 'email', name: 'email' },
-            { data: 'tax_number', name: 'tax_number' },
             { data: 'credit_limit', name: 'credit_limit' },
             { data: 'pay_term', name: 'pay_term', searchable: false, orderable: false },
             { data: 'opening_balance', name: 'opening_balance', searchable: false },
@@ -425,23 +419,20 @@ $(document).ready(function() {
             { data: 'mobile', name: 'mobile' },
             { data: 'due', searchable: false, orderable: false },
             { data: 'return_due', searchable: false, orderable: false },
-            { data: 'custom_field1', name: 'custom_field1'},
-            { data: 'custom_field2', name: 'custom_field2'},
-            { data: 'custom_field3', name: 'custom_field3'},
-            { data: 'custom_field4', name: 'custom_field4'},
-            { data: 'custom_field5', name: 'custom_field5'},
-            { data: 'custom_field6', name: 'custom_field6'},
-            { data: 'custom_field7', name: 'custom_field7'},
-            { data: 'custom_field8', name: 'custom_field8'},
-            { data: 'custom_field9', name: 'custom_field9'},
-            { data: 'custom_field10', name: 'custom_field10'},
             ]);
     }
     
+    //Force-hide selected columns on customer contacts list (overrides any previous column visibility state)
+    var contact_hidden_targets = [];
+    if (contact_table_type == 'customer') {
+        contact_hidden_targets = ['name', 'email', 'tax_number',
+            'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5',
+            'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10'];
+    }
+
     contact_table = $('#contact_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         scrollY:        "75vh",
         scrollX:        true,
         scrollCollapse: true,
@@ -494,6 +485,27 @@ $(document).ready(function() {
         },
         aaSorting: [[1, 'desc']],
         columns: columns,
+        initComplete: function() {
+            if (!contact_hidden_targets.length) {
+                return;
+            }
+
+            var settings = this.api().settings()[0];
+            var aoColumns = settings && settings.aoColumns ? settings.aoColumns : [];
+            var targets = [];
+
+            for (var i = 0; i < aoColumns.length; i++) {
+                var colData = aoColumns[i] && aoColumns[i].data ? aoColumns[i].data : null;
+                if (colData && contact_hidden_targets.indexOf(colData) !== -1) {
+                    targets.push(i);
+                }
+            }
+
+            if (targets.length) {
+                this.api().columns(targets).visible(false, false);
+                this.api().columns.adjust().draw(false);
+            }
+        },
         fnDrawCallback: function(oSettings) {
             __currency_convert_recursively($('#contact_table'));
         },
@@ -613,99 +625,55 @@ $(document).ready(function() {
                             },
                         },
                     },
-                    // tax_number remote validation removed - now handled with sweet alert
                 },
                 messages: {
                     contact_id: {
                         remote: LANG.contact_id_already_exists,
                     },
-                    tax_number: {
-                        remote: LANG.tax_number_already_exists,
-                    }
                 },
                 submitHandler: function(form) {
                     e.preventDefault();
-                    __disable_submit_button($(form).find('button[type="submit"]'));
-                    // Start with tax number validation, then proceed to mobile check
-                    checkTaxNumberAndSubmit(form);
+                    $.ajax({
+                        method: 'POST',
+                        url: base_path + '/check-mobile',
+                        dataType: 'json',
+                        data: {
+                            contact_id: function() {
+                                return $('#hidden_id').val();
+                            },
+                            mobile_number: function() {
+                                return $('#mobile').val();
+                            },
+                        },
+                        beforeSend: function(xhr) {
+                            __disable_submit_button($(form).find('button[type="submit"]'));
+                        },
+                        success: function(result) {
+                            if (result.is_mobile_exists == true) {
+                                swal({
+                                    title: LANG.sure,
+                                    text: result.msg,
+                                    icon: 'warning',
+                                    buttons: true,
+                                    dangerMode: true
+                                }).then(willContinue => {
+                                    if (willContinue) {
+                                        submitContactForm(form);
+                                    } else {
+                                        $('#mobile').select();
+                                    }
+                                });
+                                
+                            } else {
+                                submitContactForm(form);
+                            }
+                        },
+                    });
                 },
             });
 
             $('#contact_add_form').trigger('contactFormvalidationAdded');
     });
-
-    function checkTaxNumberAndSubmit(form) {
-        // Check if tax_number field exists and has a value
-        if ($('#tax_number').length && $('#tax_number').val().trim() !== '') {
-            $.ajax({
-                method: 'POST',
-                url: base_path + '/contacts/check-tax-number',
-                dataType: 'json',
-                data: {
-                    contact_id: $('#hidden_id').val(),
-                    tax_number: $('#tax_number').val(),
-                },
-                success: function(result) {
-                    if (result.is_tax_number_exists == true) {
-                        swal({
-                            title: LANG.sure,
-                            text: result.msg,
-                            icon: 'warning',
-                            buttons: true,
-                            dangerMode: true
-                        }).then(willContinue => {
-                            if (willContinue) {
-                                checkMobileAndSubmit(form);
-                            } else {
-                                $('#tax_number').select();
-                            }
-                        });
-                    } else {
-                        checkMobileAndSubmit(form);
-                    }
-                },
-            });
-        } else {
-            // If no tax number, proceed to mobile check
-            checkMobileAndSubmit(form);
-        }
-    }
-
-    function checkMobileAndSubmit(form) {
-        $.ajax({
-            method: 'POST',
-            url: base_path + '/check-mobile',
-            dataType: 'json',
-            data: {
-                contact_id: function() {
-                    return $('#hidden_id').val();
-                },
-                mobile_number: function() {
-                    return $('#mobile').val();
-                },
-            },
-            success: function(result) {
-                if (result.is_mobile_exists == true) {
-                    swal({
-                        title: LANG.sure,
-                        text: result.msg,
-                        icon: 'warning',
-                        buttons: true,
-                        dangerMode: true
-                    }).then(willContinue => {
-                        if (willContinue) {
-                            submitContactForm(form);
-                        } else {
-                            $('#mobile').select();
-                        }
-                    });
-                    
-                } else {
-                    submitContactForm(form);
-                }
-            },
-        });
-    }
 
     $(document).on('click', '.edit_contact_button', function(e) {
         e.preventDefault();
@@ -750,7 +718,6 @@ $(document).ready(function() {
     var variation_table = $('#variation_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         ajax: '/variation-templates',
         columnDefs: [
             {
@@ -1008,7 +975,6 @@ $(document).ready(function() {
     var tax_groups_table = $('#tax_groups_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         ajax: '/group-taxes',
         columnDefs: [
             {
@@ -1154,7 +1120,6 @@ $(document).ready(function() {
         processing: true,
         serverSide: true,
         bPaginate: false,
-        fixedHeader:false,
         buttons: [],
         ajax: '/invoice-schemes',
         columnDefs: [
@@ -1301,7 +1266,6 @@ $(document).ready(function() {
         processing: true,
         serverSide: true,
         bPaginate: false,
-        fixedHeader:false,
         buttons: [],
         ajax: '/business-location',
         columnDefs: [
@@ -1494,13 +1458,11 @@ $(document).ready(function() {
     expense_table = $('#expense_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         aaSorting: [[1, 'desc']],
         ajax: {
             url: '/expenses',
             data: function(d) {
                 d.expense_for = $('select#expense_for').val();
-                d.created_by = $('select#created_by').val();
                 d.contact_id = $('select#expense_contact_filter').val();
                 d.location_id = $('select#location_id').val();
                 d.expense_category_id = $('select#expense_category_id').val();
@@ -1549,7 +1511,7 @@ $(document).ready(function() {
         },
     });
 
-    $('select#location_id, select#expense_for, select#created_by, select#select#expense_contact_filter, \
+    $('select#location_id, select#expense_for, select#expense_contact_filter, \
         select#expense_category_id, select#expense_payment_status, \
         select#expense_sub_category_id_filter').on(
         'change',
@@ -1735,7 +1697,6 @@ $(document).ready(function() {
     var sales_commission_agent_table = $('#sales_commission_agent_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         ajax: '/sales-commission-agents',
         columnDefs: [
             {
@@ -1841,7 +1802,6 @@ $(document).ready(function() {
     var customer_groups_table = $('#customer_groups_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         ajax: '/customer-group',
         columnDefs: [
             {
@@ -1983,7 +1943,6 @@ $(document).ready(function() {
     discounts_table = $('#discounts_table').DataTable({
                     processing: true,
                     serverSide: true,
-                    fixedHeader:false,
                     ajax: base_path + '/discount',
                     columnDefs: [
                         {
@@ -2012,7 +1971,6 @@ $(document).ready(function() {
     types_of_service_table = $('#types_of_service_table').DataTable({
                         processing: true,
                         serverSide: true,
-                        fixedHeader:false,
                         ajax: base_path + '/types-of-service',
                         columnDefs: [
                             {
@@ -2070,20 +2028,25 @@ $(document).ready(function() {
         placeholder: LANG.search,
     });
 
-    $('#search_settings').change( function(){
-        //Get label position and add active class to the tab
+    $('#search_settings').change(function(){
+        // Get label position and add active class to the tab
         var label_index = $(this).val();
         var label = label_objects[label_index];
         $('.pos-tab-content.active').removeClass('active');
         var tab_content = label.closest('.pos-tab-content');
         tab_content.addClass('active');
-        tab_index = $('.pos-tab-content').index(tab_content);
+        var tab_index = $('.pos-tab-content').index(tab_content);
         $('.list-group-item.active').removeClass('active');
         $('.list-group-item').eq(tab_index).addClass('active');
-        //Highlight the label for three seconds
-        $([document.documentElement, document.body]).animate({
-            scrollTop: label.offset().top - 100
+            
+        // Scroll the container to the target element
+        var container = $('#scrollable-container');
+        var targetOffset = label.offset().top + container.scrollTop() - container.offset().top;
+        
+        container.animate({
+            scrollTop: targetOffset - 100 // Adjust offset as needed
         }, 500);
+        
         label.css('background-color', 'yellow');
         setTimeout(function(){ 
             label.css('background-color', ''); 

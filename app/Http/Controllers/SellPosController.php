@@ -298,18 +298,6 @@ class SellPosController extends Controller
     }
 
     /**
-     * Display the POS screen.
-     * @return \Illuminate\View\View
-     */
-    
-    public function posDisplay(){
-        $business_id = request()->session()->get('user.business_id');
-        $business_details = $this->businessUtil->getDetails($business_id);
-        $pos_settings = empty($business_details->pos_settings) ? $this->businessUtil->defaultPosSettings() : json_decode($business_details->pos_settings, true);
-        return view('sale_pos.display', compact('pos_settings'));
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -593,12 +581,6 @@ class SellPosController extends Controller
 
                     //Auto send notification
                     $whatsapp_link = $this->notificationUtil->autoSendNotification($business_id, 'new_sale', $transaction, $transaction->contact);
-
-                    // zatca instant sync if status final type sell
-                    if($transaction->type == 'sell'){
-                            $this->moduleUtil->getModuleData('after_sales', ['transaction' => $transaction]);
-                    }
-
                 }
 
                 if (!empty($transaction->sales_order_ids)) {
@@ -610,8 +592,6 @@ class SellPosController extends Controller
                 Media::uploadMedia($business_id, $transaction, $request, 'documents');
 
                 $this->transactionUtil->activityLog($transaction, 'added');
-
-                
 
                 DB::commit();
 
@@ -821,10 +801,6 @@ class SellPosController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        if (!$this->moduleUtil->isSubscribed($business_id)) {
-            return $this->moduleUtil->expiredResponse();
-        }
-
         //Check if the transaction can be edited or not.
         $edit_days = request()->session()->get('business.transaction_edit_days');
         if (!$this->transactionUtil->canBeEdited($id, $edit_days)) {
@@ -854,15 +830,6 @@ class SellPosController extends Controller
             ->where('type', 'sell')
             ->with(['price_group', 'types_of_service'])
             ->findorfail($id);
-
-        // If ZATCA module is installed and this transaction is successfully synced, prevent edit
-        $moduleUtil = new ModuleUtil();
-        if ($moduleUtil->isModuleInstalled('ZatcaIntegrationKsa')) {
-            if (!empty($transaction) && $transaction->zatca_status === 'success') {
-                return back()->with('status', ['success' => 0,
-                    'msg' => __('lang_v1.invoice_synced_to_zatca_cannot_be_edited')]);
-            }
-        }
 
         $location_id = $transaction->location_id;
         $business_location = BusinessLocation::find($location_id);
@@ -898,7 +865,6 @@ class SellPosController extends Controller
                 DB::raw("IF(pv.is_dummy = 0, CONCAT(p.name, ' (', pv.name, ':',variations.name, ')'), p.name) AS product_name"),
                 'p.id as product_id',
                 'p.enable_stock',
-                'p.image as product_image',
                 'p.name as product_actual_name',
                 'p.type as product_type',
                 'pv.name as product_variation_name',
@@ -935,8 +901,6 @@ class SellPosController extends Controller
             ->get();
         if (!empty($sell_details)) {
             foreach ($sell_details as $key => $value) {
-                $variation = Variation::with('media')->findOrFail($value->variation_id);
-                $sell_details[$key]->media = $variation->media;
 
                 //If modifier or combo sell line then unset
                 if (!empty($sell_details[$key]->parent_sell_line_id)) {
@@ -1088,7 +1052,7 @@ class SellPosController extends Controller
         $edit_price = auth()->user()->can('edit_product_price_from_pos_screen');
         $shipping_statuses = $this->transactionUtil->shipping_statuses();
 
-        $warranties = $this->productUtil->getWarrantiesForDropdown();
+        $warranties = $this->__getwarranties();
         $sub_type = request()->get('sub_type');
 
         //pos screen view from module
@@ -1162,15 +1126,6 @@ class SellPosController extends Controller
                 $status_before = $transaction_before->status;
                 $rp_earned_before = $transaction_before->rp_earned;
                 $rp_redeemed_before = $transaction_before->rp_redeemed;
-
-                // If ZATCA module is installed and this transaction is successfully synced, prevent update
-                $moduleUtil = new ModuleUtil();
-                if ($moduleUtil->isModuleInstalled('ZatcaIntegrationKsa')) {
-                    if (!empty($transaction_before) && $transaction_before->zatca_status === 'success') {
-                        return back()->with('status', ['success' => 0,
-                            'msg' => __('lang_v1.invoice_synced_to_zatca_cannot_be_edited')]);
-                    }
-                }
 
                 if ($transaction_before->is_direct_sale == 1) {
                     $is_direct_sale = true;
@@ -1435,12 +1390,6 @@ class SellPosController extends Controller
 
                     //Auto send notification
                     $whatsapp_link = $this->notificationUtil->autoSendNotification($business_id, 'new_sale', $transaction, $transaction->contact);
-
-                    // zatca instant sync if status final type sell
-                    if($input['status'] == 'final'){
-                        $this->moduleUtil->getModuleData('after_sales', ['transaction' => $transaction]);
-                    }
-
                 }
 
                 $log_properties = [];
@@ -1615,7 +1564,6 @@ class SellPosController extends Controller
         $business_id = request()->session()->get('user.business_id');
         $sales_order_id = request()->input('sales_order_id');
         $row_count = request()->get('product_row');
-        $is_serial_no = request()->get('is_serial_no');
         $row_count = $row_count + 1;
 
         $sales_order = Transaction::where('business_id', $business_id)
@@ -1630,7 +1578,7 @@ class SellPosController extends Controller
                 $quantity = $sell_line->quantity - $sell_line->so_quantity_invoiced;
                 $sell_line->qty_available = $quantity;
                 $sell_line->formatted_qty_available = $this->transactionUtil->num_f($quantity);
-                $sell_line_row = $this->productUtil->getSellLineRow($sell_line->variation_id, $sales_order->location_id, $quantity, $row_count, true, $is_serial_no, $sell_line);
+                $sell_line_row = $this->getSellLineRow($sell_line->variation_id, $sales_order->location_id, $quantity, $row_count, true, $sell_line);
                 $html .= $sell_line_row['html_content'];
                 $row_count++;
             }
@@ -1643,6 +1591,133 @@ class SellPosController extends Controller
         ];
     }
 
+    private function getSellLineRow($variation_id, $location_id, $quantity, $row_count, $is_direct_sell, $so_line = null)
+    {
+        $business_id = request()->session()->get('user.business_id');
+        $business_details = $this->businessUtil->getDetails($business_id);
+        //Check for weighing scale barcode
+        $weighing_barcode = request()->get('weighing_scale_barcode');
+
+        $pos_settings = empty($business_details->pos_settings) ? $this->businessUtil->defaultPosSettings() : json_decode($business_details->pos_settings, true);
+
+        $check_qty = !empty($pos_settings['allow_overselling']) ? false : true;
+
+        $is_sales_order = request()->has('is_sales_order') && request()->input('is_sales_order') == 'true' ? true : false;
+        $is_draft = request()->has('is_draft') && request()->input('is_draft') == 'true' ? true : false;
+
+        if ($is_sales_order || !empty($so_line) || $is_draft) {
+            $check_qty = false;
+        }
+
+        if (request()->input('disable_qty_alert') === 'true') {
+            $pos_settings['allow_overselling'] = true;
+        }
+
+        $product = $this->productUtil->getDetailsFromVariation($variation_id, $business_id, $location_id, $check_qty);
+
+        if (!isset($product->quantity_ordered)) {
+            $product->quantity_ordered = $quantity;
+        }
+
+        $product->secondary_unit_quantity = !isset($product->secondary_unit_quantity) ? 0 : $product->secondary_unit_quantity;
+
+        $product->formatted_qty_available = $this->productUtil->num_f($product->qty_available, false, null, true);
+
+        $sub_units = $this->productUtil->getSubUnits($business_id, $product->unit_id, false, $product->product_id);
+
+        //Get customer group and change the price accordingly
+        $customer_id = request()->get('customer_id', null);
+        $cg = $this->contactUtil->getCustomerGroup($business_id, $customer_id);
+        $percent = (empty($cg) || empty($cg->amount) || $cg->price_calculation_type != 'percentage') ? 0 : $cg->amount;
+        $product->default_sell_price = $product->default_sell_price + ($percent * $product->default_sell_price / 100);
+        $product->sell_price_inc_tax = $product->sell_price_inc_tax + ($percent * $product->sell_price_inc_tax / 100);
+
+        $tax_dropdown = TaxRate::forBusinessDropdown($business_id, true, true);
+
+        $enabled_modules = $this->transactionUtil->allModulesEnabled();
+
+        //Get lot number dropdown if enabled
+        $lot_numbers = [];
+        if (request()->session()->get('business.enable_lot_number') == 1 || request()->session()->get('business.enable_product_expiry') == 1) {
+            $lot_number_obj = $this->transactionUtil->getLotNumbersFromVariation($variation_id, $business_id, $location_id, true);
+            foreach ($lot_number_obj as $lot_number) {
+                $lot_number->qty_formated = $this->productUtil->num_f($lot_number->qty_available);
+                $lot_numbers[] = $lot_number;
+            }
+        }
+        $product->lot_numbers = $lot_numbers;
+
+        $purchase_line_id = request()->get('purchase_line_id');
+
+        $price_group = request()->input('price_group');
+        if (!empty($price_group)) {
+            $variation_group_prices = $this->productUtil->getVariationGroupPrice($variation_id, $price_group, $product->tax_id);
+
+            if (!empty($variation_group_prices['price_inc_tax'])) {
+                $product->sell_price_inc_tax = $variation_group_prices['price_inc_tax'];
+                $product->default_sell_price = $variation_group_prices['price_exc_tax'];
+            }
+        }
+
+        $warranties = $this->__getwarranties();
+
+        $output['success'] = true;
+        $output['enable_sr_no'] = $product->enable_sr_no;
+
+        $waiters = [];
+        if ($this->productUtil->isModuleEnabled('service_staff') && !empty($pos_settings['inline_service_staff'])) {
+            $waiters_enabled = true;
+            $waiters = $this->productUtil->serviceStaffDropdown($business_id, $location_id);
+        }
+
+        $last_sell_line = null;
+        if ($is_direct_sell) {
+            $last_sell_line = $this->getLastSellLineForCustomer($variation_id, $customer_id, $location_id);
+        }
+
+        if (request()->get('type') == 'sell-return') {
+            $output['html_content'] = view('sell_return.partials.product_row')
+                ->with(compact('product', 'row_count', 'tax_dropdown', 'enabled_modules', 'sub_units'))
+                ->render();
+        } else {
+            $is_cg = !empty($cg->id) ? true : false;
+
+            $discount = $this->productUtil->getProductDiscount($product, $business_id, $location_id, $is_cg, $price_group, $variation_id);
+
+            if ($is_direct_sell) {
+                $edit_discount = auth()->user()->can('edit_product_discount_from_sale_screen');
+                $edit_price = auth()->user()->can('edit_product_price_from_sale_screen');
+            } else {
+                $edit_discount = auth()->user()->can('edit_product_discount_from_pos_screen');
+                $edit_price = auth()->user()->can('edit_product_price_from_pos_screen');
+            }
+
+            $output['html_content'] = view('sale_pos.product_row')
+                ->with(compact('product', 'row_count', 'tax_dropdown', 'enabled_modules', 'pos_settings', 'sub_units', 'discount', 'waiters', 'edit_discount', 'edit_price', 'purchase_line_id', 'warranties', 'quantity', 'is_direct_sell', 'so_line', 'is_sales_order', 'last_sell_line'))
+                ->render();
+        }
+
+        return $output;
+    }
+
+    /**
+     * Finds last sell line of a variation for the customer for a location
+     */
+    private function getLastSellLineForCustomer($variation_id, $customer_id, $location_id)
+    {
+        $sell_line = TransactionSellLine::join('transactions as t', 't.id', '=', 'transaction_sell_lines.transaction_id')
+            ->where('t.location_id', $location_id)
+            ->where('t.contact_id', $customer_id)
+            ->where('t.type', 'sell')
+            ->where('t.status', 'final')
+            ->where('transaction_sell_lines.variation_id', $variation_id)
+            ->orderBy('t.transaction_date', 'desc')
+            ->select('transaction_sell_lines.*')
+            ->first();
+
+        return $sell_line;
+    }
+
     /**
      * Returns the HTML row for a product in POS
      *
@@ -1652,8 +1727,54 @@ class SellPosController extends Controller
      */
     public function getProductRow($variation_id, $location_id)
     {
-        // Delegate to ProductUtil - all business logic is there
-        return $this->productUtil->getPosProductRow($variation_id, $location_id);
+        $output = [];
+
+        try {
+            $row_count = request()->get('product_row');
+            $row_count = $row_count + 1;
+            $quantity = request()->get('quantity', 1);
+            $weighing_barcode = request()->get('weighing_scale_barcode', null);
+
+            $is_direct_sell = false;
+            if (request()->get('is_direct_sell') == 'true') {
+                $is_direct_sell = true;
+            }
+
+            if ($variation_id == 'null' && !empty($weighing_barcode)) {
+                $product_details = $this->__parseWeighingBarcode($weighing_barcode);
+                if ($product_details['success']) {
+                    $variation_id = $product_details['variation_id'];
+                    $quantity = $product_details['qty'];
+                } else {
+                    $output['success'] = false;
+                    $output['msg'] = $product_details['msg'];
+
+                    return $output;
+                }
+            }
+
+            $output = $this->getSellLineRow($variation_id, $location_id, $quantity, $row_count, $is_direct_sell);
+
+            if ($this->transactionUtil->isModuleEnabled('modifiers') && !$is_direct_sell) {
+                $variation = Variation::find($variation_id);
+                $business_id = request()->session()->get('user.business_id');
+                $this_product = Product::where('business_id', $business_id)
+                    ->with(['modifier_sets'])
+                    ->find($variation->product_id);
+                if (count($this_product->modifier_sets) > 0) {
+                    $product_ms = $this_product->modifier_sets;
+                    $output['html_modifier'] = view('restaurant.product_modifier_set.modifier_for_product')
+                        ->with(compact('product_ms', 'row_count'))->render();
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::emergency('File:' . $e->getFile() . 'Line:' . $e->getLine() . 'Message:' . $e->getMessage());
+
+            $output['success'] = false;
+            $output['msg'] = __('lang_v1.item_out_of_stock');
+        }
+
+        return $output;
     }
 
     /**
@@ -1727,14 +1848,11 @@ class SellPosController extends Controller
             $query->where('transactions.sub_type', null);
         }
 
-        // Retrieve the limit for displaying recent transactions from the configuration
-        $limit = config('constants.pos_recent_transactions_display_limit', 10);
-        
         $transactions = $query->orderBy('transactions.created_at', 'desc')
             ->groupBy('transactions.id')
             ->select('transactions.*')
             ->with(['contact', 'table'])
-            ->limit($limit)
+            ->limit(10)
             ->get();
 
         return view('sale_pos.partials.recent_transactions')
@@ -1791,6 +1909,132 @@ class SellPosController extends Controller
             return $output;
         }
     }
+public function printAllDraftInvoices(Request $request)
+{
+    if ($request->ajax()) {
+        try {
+            $business_id = $request->session()->get('user.business_id');
+            
+            // Fetch business info
+            $business = DB::table('business')->where('id', $business_id)->first();
+            
+            // Fixed Query: Group by product and sum quantities
+            $draft_items = DB::table('transactions as t')
+                ->join('transaction_sell_lines as tsl', 't.id', '=', 'tsl.transaction_id')
+                ->leftJoin('products as p', 'tsl.product_id', '=', 'p.id')
+                ->where('t.business_id', $business_id)
+                ->where('t.type', 'sell')
+                ->where('t.status', 'draft')
+                ->select(
+                    'p.sku as item_code',
+                    'p.name as product_name',
+                    'tsl.unit_price',
+                    DB::raw('SUM(tsl.quantity) as total_qty'),
+                    DB::raw('SUM(tsl.quantity * tsl.unit_price) as subtotal')
+                )
+                ->groupBy('p.id', 'p.sku', 'p.name', 'tsl.unit_price')
+                ->get();
+            
+            // Debug: Add logging to check if data exists
+            \Log::info('Draft items count: ' . $draft_items->count());
+            \Log::info('Draft items data: ', $draft_items->toArray());
+            
+            if ($draft_items->isEmpty()) {
+                return response()->json([
+                    'success' => 0,
+                    'msg' => __('messages.no_draft_items_found'),
+                ]);
+            }
+            
+            // Calculate total
+            $grand_total = $draft_items->sum('subtotal');
+            
+            // Build HTML for printing with improved styling
+            $html = '<!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="utf-8">
+                        <title>All Draft Items Report</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                            .container { max-width: 800px; margin: auto; }
+                            .header { text-align: center; margin-bottom: 30px; }
+                            .business-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+                            .business-address { font-size: 14px; color: #666; }
+                            .report-title { font-size: 18px; margin: 20px 0; text-align: center; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            th { background-color: #f2f2f2; font-weight: bold; }
+                            .text-right { text-align: right; }
+                            .total-row { font-weight: bold; background-color: #f9f9f9; }
+                            @media print {
+                                body { margin: 0; }
+                                .no-print { display: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">';
+            
+            $html .= '<div class="header">';
+            $html .= '<div class="business-name">' . ($business->name ?? 'Business Name') . '</div>';
+            if (!empty($business->address)) {
+                $html .= '<div class="business-address">' . htmlspecialchars($business->address) . '</div>';
+            }
+            $html .= '<div class="report-title">All Draft Items Report</div>';
+            $html .= '<div style="font-size: 12px; color: #666;">Generated on: ' . date('Y-m-d H:i:s') . '</div>';
+            $html .= '</div>';
+            
+            $html .= '<table>
+                        <thead>
+                            <tr>
+                                <th>Item Code</th>
+                                <th>Item Name</th>
+                                <th class="text-right">Total Qty</th>
+                                <th class="text-right">Unit Price</th>
+                                <th class="text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>';
+            
+            foreach ($draft_items as $item) {
+                $html .= '<tr>
+                            <td>' . htmlspecialchars($item->item_code ?? 'N/A') . '</td>
+                            <td>' . htmlspecialchars($item->product_name ?? 'N/A') . '</td>
+                            <td class="text-right">' . number_format($item->total_qty, 2) . '</td>
+                            <td class="text-right">' . number_format($item->unit_price, 2) . '</td>
+                            <td class="text-right">' . number_format($item->subtotal, 2) . '</td>
+                        </tr>';
+            }
+            
+            $html .= '<tr class="total-row">
+                        <td colspan="4" class="text-right">Grand Total:</td>
+                        <td class="text-right">' . number_format($grand_total, 2) . '</td>
+                    </tr>';
+            
+            $html .= '</tbody></table>';
+            $html .= '</div></body></html>';
+            
+            return response()->json([
+                'success' => 1,
+                'receipt' => $html,
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::emergency('File:' . $e->getFile() . ' Line:' . $e->getLine() . ' Message:' . $e->getMessage());
+            return response()->json([
+                'success' => 0,
+                'msg' => __('messages.something_went_wrong') . ' Error: ' . $e->getMessage(),
+            ]);
+        }
+    }
+    
+    return response()->json([
+        'success' => 0,
+        'msg' => 'Invalid request method',
+    ]);
+}
+
 
     /**
      * Gives suggetion for product based on category
@@ -1813,7 +2057,6 @@ class SellPosController extends Controller
 
             $products = Variation::join('products as p', 'variations.product_id', '=', 'p.id')
                 ->join('product_locations as pl', 'pl.product_id', '=', 'p.id')
-                ->join('units as u', 'p.unit_id', '=', 'u.id')
                 ->leftjoin(
                     'variation_location_details AS VLD',
                     function ($join) use ($location_id) {
@@ -1886,8 +2129,7 @@ class SellPosController extends Controller
                 'variations.name as variation',
                 'VLD.qty_available',
                 'variations.default_sell_price as selling_price',
-                'variations.sub_sku',
-                'u.short_name as unit'
+                'variations.sub_sku'
             )
                 ->with(['media', 'group_prices'])
                 ->orderBy('p.name', 'asc')
@@ -2497,6 +2739,65 @@ class SellPosController extends Controller
             'modal_html' => $modal_html,
             'price_group_name' => $price_group_name,
         ]);
+    }
+
+    private function __getwarranties()
+    {
+        $business_id = session()->get('user.business_id');
+        $common_settings = session()->get('business.common_settings');
+        $is_warranty_enabled = !empty($common_settings['enable_product_warranty']) ? true : false;
+        $warranties = $is_warranty_enabled ? Warranty::forDropdown($business_id) : [];
+
+        return $warranties;
+    }
+
+    /**
+     * Parse the weighing barcode.
+     *
+     * @return array
+     */
+    private function __parseWeighingBarcode($scale_barcode)
+    {
+        $business_id = session()->get('user.business_id');
+
+        $scale_setting = session()->get('business.weighing_scale_setting');
+
+        $error_msg = trans('messages.something_went_wrong');
+
+        //Check for prefix.
+        if ((strlen($scale_setting['label_prefix']) == 0) || Str::startsWith($scale_barcode, $scale_setting['label_prefix'])) {
+            $scale_barcode = substr($scale_barcode, strlen($scale_setting['label_prefix']));
+
+            //Get product sku, trim left side 0
+            $sku = ltrim(substr($scale_barcode, 0, $scale_setting['product_sku_length'] + 1), '0');
+
+            //Get quantity integer
+            $qty_int = substr($scale_barcode, $scale_setting['product_sku_length'] + 1, $scale_setting['qty_length'] + 1);
+
+            //Get quantity decimal
+            $qty_decimal = '0.' . substr($scale_barcode, $scale_setting['product_sku_length'] + $scale_setting['qty_length'] + 2, $scale_setting['qty_length_decimal'] + 1);
+
+            $qty = (float) $qty_int + (float) $qty_decimal;
+
+            //Find the variation id
+            $result = $this->productUtil->filterProduct($business_id, $sku, null, false, null, [], ['sub_sku'], false, 'exact')->first();
+
+            if (!empty($result)) {
+                return ['variation_id' => $result->variation_id,
+                    'qty' => $qty,
+                    'success' => true,
+                ];
+            } else {
+                $error_msg = trans('lang_v1.sku_not_match', ['sku' => $sku]);
+            }
+        } else {
+            $error_msg = trans('lang_v1.prefix_did_not_match');
+        }
+
+        return [
+            'success' => false,
+            'msg' => $error_msg,
+        ];
     }
 
     public function getFeaturedProducts($id)

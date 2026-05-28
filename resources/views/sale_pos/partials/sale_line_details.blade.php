@@ -29,7 +29,7 @@
                 - {{ $sell_line->variations->product_variation->name ?? ''}}
                 - {{ $sell_line->variations->name ?? ''}},
                 @endif
-                {{ $sell_line->variations->sub_sku ?? ''}}
+                
                 @php
                 $brand = $sell_line->product->brand;
                 @endphp

@@ -161,9 +161,6 @@
                                     <th>@lang('lang_v1.total_purchase_return_due')</th>
                                 @elseif($type == 'customer')
                                     <th>@lang('business.business_name')</th>
-                                    <th>@lang('user.name')</th>
-                                    <th>@lang('business.email')</th>
-                                    <th>@lang('contact.tax_no')</th>
                                     <th>@lang('lang_v1.credit_limit')</th>
                                     <th>@lang('contact.pay_term')</th>
                                     <th>@lang('account.opening_balance')</th>
@@ -181,70 +178,74 @@
                                 @php
                                     $custom_labels = json_decode(session('business.custom_labels'), true);
                                 @endphp
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_1'] ?? __('lang_v1.contact_custom_field1') }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_2'] ?? __('lang_v1.contact_custom_field2') }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_3'] ?? __('lang_v1.contact_custom_field3') }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_4'] ?? __('lang_v1.contact_custom_field4') }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_5'] ?? __('lang_v1.custom_field', ['number' => 5]) }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_6'] ?? __('lang_v1.custom_field', ['number' => 6]) }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_7'] ?? __('lang_v1.custom_field', ['number' => 7]) }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_8'] ?? __('lang_v1.custom_field', ['number' => 8]) }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_9'] ?? __('lang_v1.custom_field', ['number' => 9]) }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_10'] ?? __('lang_v1.custom_field', ['number' => 10]) }}
-                                </th>
+                                @if($type != 'customer')
+                                    <th>
+                                        {{ $custom_labels['contact']['custom_field_1'] ?? __('lang_v1.contact_custom_field1') }}
+                                    </th>
+                                    <th>
+                                        {{ $custom_labels['contact']['custom_field_2'] ?? __('lang_v1.contact_custom_field2') }}
+                                    </th>
+                                    <th>
+                                        {{ $custom_labels['contact']['custom_field_3'] ?? __('lang_v1.contact_custom_field3') }}
+                                    </th>
+                                    <th>
+                                        {{ $custom_labels['contact']['custom_field_4'] ?? __('lang_v1.contact_custom_field4') }}
+                                    </th>
+                                    <th>
+                                        {{ $custom_labels['contact']['custom_field_5'] ?? __('lang_v1.custom_field', ['number' => 5]) }}
+                                    </th>
+                                    <th>
+                                        {{ $custom_labels['contact']['custom_field_6'] ?? __('lang_v1.custom_field', ['number' => 6]) }}
+                                    </th>
+                                    <th>
+                                        {{ $custom_labels['contact']['custom_field_7'] ?? __('lang_v1.custom_field', ['number' => 7]) }}
+                                    </th>
+                                    <th>
+                                        {{ $custom_labels['contact']['custom_field_8'] ?? __('lang_v1.custom_field', ['number' => 8]) }}
+                                    </th>
+                                    <th>
+                                        {{ $custom_labels['contact']['custom_field_9'] ?? __('lang_v1.custom_field', ['number' => 9]) }}
+                                    </th>
+                                    <th>
+                                        {{ $custom_labels['contact']['custom_field_10'] ?? __('lang_v1.custom_field', ['number' => 10]) }}
+                                    </th>
+                                @endif
                             </tr>
                         </thead>
                         <tfoot>
-                            <tr class="bg-gray font-17 text-center footer-total">
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td @if ($type == 'supplier') colspan="6"
-                            @elseif($type == 'customer')
-                                @if ($reward_enabled)
-                                    colspan="9"
-                                @else
-                                    colspan="8" @endif
-                                    @endif>
-                                    <strong>
-                                        @lang('sale.total'):
-                                    </strong>
-                                </td>
-                                <td class="footer_contact_due"></td>
-                                <td class="footer_contact_return_due"></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                            </tr>
+                            @if($type == 'customer')
+                                <tr class="bg-gray font-17 text-center footer-total">
+                                    <td colspan="@if($reward_enabled)12 @else 11 @endif">
+                                        <strong>@lang('sale.total'):</strong>
+                                    </td>
+                                    <td class="footer_contact_due"></td>
+                                    <td class="footer_contact_return_due"></td>
+                                </tr>
+                            @else
+                                <tr class="bg-gray font-17 text-center footer-total">
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td colspan="6">
+                                        <strong>@lang('sale.total'):</strong>
+                                    </td>
+                                    <td class="footer_contact_due"></td>
+                                    <td class="footer_contact_return_due"></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            @endif
                         </tfoot>
                     </table>
                 </div>

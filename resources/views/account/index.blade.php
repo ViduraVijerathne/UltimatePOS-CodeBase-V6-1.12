@@ -289,7 +289,6 @@
             capital_account_table = $('#capital_account_table').DataTable({
                 processing: true,
                 serverSide: true,
-                fixedHeader:false,
                 ajax: '/account/account?account_type=capital',
                 columnDefs: [{
                     "targets": 5,
@@ -326,7 +325,6 @@
             other_account_table = $('#other_account_table').DataTable({
                 processing: true,
                 serverSide: true,
-                fixedHeader:false,
                 ajax: {
                     url: '/account/account?account_type=other',
                     data: function(d) {

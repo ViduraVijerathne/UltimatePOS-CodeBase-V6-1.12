@@ -16,7 +16,7 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         {!! Form::label('account_id', __('account.account') . ':') !!}
-                        {!! Form::select('account_id', $accounts, null, ['class' => 'form-control select2', 'style' => 'width:100%']) !!}
+                        {!! Form::select('account_id', $accounts, null, ['class' => 'form-control select2']) !!}
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -64,9 +64,7 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
-
             if ($('#date_filter').length == 1) {
-
                 $('#date_filter').daterangepicker(
                     dateRangeSettings,
                     function(start, end) {
@@ -85,7 +83,6 @@
             payment_account_report = $('#payment_account_report').DataTable({
                 processing: true,
                 serverSide: true,
-                fixedHeader:false,
                 "ajax": {
                     "url": "{{ action([\App\Http\Controllers\AccountReportsController::class, 'paymentAccountReport']) }}",
                     "data": function(d) {

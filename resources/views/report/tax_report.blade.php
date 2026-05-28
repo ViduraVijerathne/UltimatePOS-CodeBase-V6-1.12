@@ -24,7 +24,7 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         {!! Form::label('tax_report_contact_id', __( 'report.contact' ) . ':') !!}
-                        {!! Form::select('tax_report_contact_id', $contact_dropdown, null , ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'tax_report_contact_id', 'placeholder' => __('lang_v1.all')]); !!}
+                        {!! Form::select('tax_report_contact_id', $contact_dropdown, null , ['class' => 'form-control select2', 'id' => 'tax_report_contact_id', 'placeholder' => __('lang_v1.all')]); !!}
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -107,11 +107,11 @@
             <div class="nav-tabs-custom">
                 <ul class="nav nav-tabs">
                     <li class="active">
-                        <a href="#input_tax_tab" data-toggle="tab" aria-expanded="true"><i class="fa fas fa-arrow-circle-down" aria-hidden="true"></i> @lang('report.input_tax') ( @lang('lang_v1.purchase') )</a>
+                        <a href="#input_tax_tab" data-toggle="tab" aria-expanded="true"><i class="fa fas fa-arrow-circle-down" aria-hidden="true"></i> @lang('report.input_tax')</a>
                     </li>
 
                     <li>
-                        <a href="#output_tax_tab" data-toggle="tab" aria-expanded="true"><i class="fa fas fa-arrow-circle-up" aria-hidden="true"></i> @lang('report.output_tax')  ( @lang('sale.sells') )</a>
+                        <a href="#output_tax_tab" data-toggle="tab" aria-expanded="true"><i class="fa fas fa-arrow-circle-up" aria-hidden="true"></i> @lang('report.output_tax')</a>
                     </li>
 
                     <li>
@@ -266,7 +266,6 @@
         input_tax_table = $('#input_tax_table').DataTable({
             processing: true,
             serverSide: true,
-            fixedHeader:false,
             ajax: {
                 url: '/reports/tax-details',
                 data: function(d) {
@@ -317,7 +316,6 @@
                     output_tax_datatable = $('#output_tax_table').DataTable({
                         processing: true,
                         serverSide: true,
-                        fixedHeader:false,
                         aaSorting: [[0, 'desc']],
                         ajax: {
                             url: '/reports/tax-details',
@@ -368,7 +366,6 @@
                     expense_tax_datatable = $('#expense_tax_table').DataTable({
                         processing: true,
                         serverSide: true,
-                        fixedHeader:false,
                         ajax: {
                             url: '/reports/tax-details',
                             data: function(d) {
@@ -412,10 +409,6 @@
                     });
                 }
             }
-
-             // remove class from data table button
-             $('.btn-default').removeClass('btn-default');
-            $('.tw-dw-btn-outline').removeClass('btn');
         });
         
         $('#tax_report_date_range, #tax_report_location_id, #tax_report_contact_id').change( function(){
@@ -428,7 +421,6 @@
             if ($("#expense_tax_tab").hasClass('active')) {
                 expense_tax_datatable.ajax.reload();
             }
-            
         });
     });
 </script>

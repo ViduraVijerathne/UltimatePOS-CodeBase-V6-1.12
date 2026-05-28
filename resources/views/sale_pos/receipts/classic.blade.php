@@ -1,6 +1,18 @@
 <!-- business information here -->
 
-<div class="row" style="color: #000000 !important;">
+
+
+<!-- business information here -->
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    </head>
+    <body>
+        <div class="ticket">
+      <div class="row receipt-header" style="color: #000000 !important;">
 		<!-- Logo -->
 		@if(empty($receipt_details->letter_head))
 			@if(!empty($receipt_details->logo))
@@ -88,13 +100,9 @@
 		<!-- Invoice  number, Date  -->
 		<p style="width: 100% !important" class="word-wrap">
 			<span class="pull-left text-left word-wrap">
-				@if(!empty($receipt_details->invoice_no_prefix))
-					<b>{!! $receipt_details->invoice_no_prefix !!}</b>
-				@endif
-				{{$receipt_details->invoice_no}}
 
 				@if(!empty($receipt_details->types_of_service))
-					<br/>
+					
 					<span class="pull-left text-left">
 						<strong>{!! $receipt_details->types_of_service_label !!}:</strong>
 						{{$receipt_details->types_of_service}}
@@ -122,7 +130,7 @@
 
 				<!-- customer info -->
 				@if(!empty($receipt_details->customer_info))
-					<br/>
+					
 					<b>{{ $receipt_details->customer_label }}</b> <br> {!! $receipt_details->customer_info !!} <br>
 				@endif
 				@if(!empty($receipt_details->client_id_label))
@@ -136,10 +144,7 @@
 				@if(!empty($receipt_details->customer_custom_fields))
 					<br/>{!! $receipt_details->customer_custom_fields !!}
 				@endif
-				@if(!empty($receipt_details->sales_person_label))
-					<br/>
-					<b>{{ $receipt_details->sales_person_label }}</b> {{ $receipt_details->sales_person }}
-				@endif
+
 				@if(!empty($receipt_details->commission_agent_label))
 					<br/>
 					<strong>{{ $receipt_details->commission_agent_label }}</strong> {{ $receipt_details->commission_agent }}
@@ -151,6 +156,10 @@
 			</span>
 
 			<span class="pull-right text-left">
+			    				@if(!empty($receipt_details->invoice_no_prefix))
+					<b>{!! $receipt_details->invoice_no_prefix !!}</b>
+				@endif
+				{{$receipt_details->invoice_no}}<br>
 				<b>{{$receipt_details->date_label}}</b> {{$receipt_details->invoice_date}}
 
 				@if(!empty($receipt_details->due_date_label))
@@ -261,7 +270,10 @@
 					<br>
 					<strong>{{ $receipt_details->sell_custom_field_4_label }}:</strong> {!!$receipt_details->sell_custom_field_4_value ?? ''!!}
 				@endif
-
+				@if(!empty($receipt_details->sales_person_label))
+					<br/>
+					<b>{{ $receipt_details->sales_person_label }}</b> {{ $receipt_details->sales_person }}
+				@endif
 			</span>
 		</p>
 	</div>
@@ -287,7 +299,7 @@
 				$p_width -= 10;
 			@endphp
 		@endif
-		<table class="table table-responsive table-slim">
+		<table class="table table-slim" >
 			<thead>
 				<tr>
 					<th width="{{$p_width}}%">{{$receipt_details->table_product_label}}</th>
@@ -302,7 +314,7 @@
 					<th class="text-right" width="15%">{{$receipt_details->table_subtotal_label}}</th>
 				</tr>
 			</thead>
-			<tbody>
+			<tbody >
 				@forelse($receipt_details->lines as $line)
 					<tr>
 						<td>
@@ -437,16 +449,7 @@
 				</td>
 			</tr>
 			@endif
-			@if(!empty($receipt_details->total_previous_due))
-			<tr>
-				<th>
-					{!! $receipt_details->total_previous_due_label !!}
-				</th>
-				<td class="text-right">
-					{{$receipt_details->total_previous_due}}
-				</td>
-			</tr>
-			@endif
+
 			@if(!empty($receipt_details->all_due))
 			<tr>
 				<th>
@@ -601,18 +604,19 @@
 					@endif
 
 					<!-- Total -->
-					<tr>
-						<th>
-							{!! $receipt_details->total_label !!}
-						</th>
-						<td class="text-right">
-							{{$receipt_details->total}}
-							@if(!empty($receipt_details->total_in_words))
-								<br>
-								<small>({{$receipt_details->total_in_words}})</small>
-							@endif
-						</td>
-					</tr>
+<tr>
+    <th>
+        {!! $receipt_details->total_label !!}
+    </th>
+    <td class="text-right">
+        <div>{{$receipt_details->total}}</div>
+        @if(!empty($receipt_details->total_in_words))
+            <div style="white-space: nowrap;">
+                <small>({{$receipt_details->total_in_words}})</small>
+            </div>
+        @endif
+    </td>
+</tr>
 				</tbody>
         	</table>
         </div>
@@ -663,3 +667,98 @@
 		</div>
 	@endif
 </div>
+</div>
+    </body>
+</html>
+
+<style>
+            @media print {
+                body {
+                    color: #000;
+
+                }
+
+                /* Remove all page-break restrictions that prevent content flow */
+                * {
+                    page-break-inside: auto !important;
+                    page-break-before: auto !important;
+                    page-break-after: auto !important;
+                }
+
+                /* Allow tables to break naturally across pages */
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    page-break-inside: auto;
+                }
+
+                /* Repeat table headers on each page */
+                thead {
+                    display: table-header-group;
+                }
+
+                tbody {
+                    display: table-row-group;
+                }
+
+                /* Allow table rows to break if necessary, but prefer keeping together */
+                tr {
+                    page-break-inside: avoid;
+                    page-break-after: auto;
+                }
+
+                /* Allow table cells to wrap content properly */
+                td, th {
+                    word-wrap: break-word;
+                    white-space: normal;
+                    vertical-align: top;
+                }
+
+                /* Only keep essential sections together */
+                .receipt-header {
+                    page-break-after: auto;
+                }
+
+                /* Allow long item lists to flow across pages */
+                .items-section,
+                .items-table,
+                .items-table tbody {
+                    page-break-inside: auto;
+                }
+
+                /* Keep totals section together only if it fits */
+                .totals-section {
+                    page-break-inside: avoid;
+                    page-break-before: auto;
+                }
+
+                /* Images: scale down and allow natural flow */
+                img {
+                    max-height: 50px;
+                    width: auto;
+                    page-break-inside: auto;
+                }
+
+
+                /* Ensure proper spacing without hiding content */
+                .row {
+                    display: block !important;
+                    width: 100% !important;
+                    clear: both !important;
+                }
+
+                /* Remove any fixed heights that might clip content */
+                div, section, article {
+                    height: auto !important;
+                    min-height: 0 !important;
+                    max-height: none !important;
+                }
+
+                /* Ensure text content is always visible */
+                p, span, div {
+                    orphans: 1;
+                    widows: 1;
+                }
+            }
+</style>
+

@@ -44,7 +44,4 @@ return [
     'price' => 'Price',
     'activate' => 'Activate',
     'deactivate' => 'Deactivate',
-    'print_detailed' => 'Print Detailed',
-    'print_mini' => 'Print Mini',
-    'opening' => 'opening',
 ];
