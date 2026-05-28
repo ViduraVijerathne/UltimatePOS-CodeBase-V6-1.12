@@ -440,6 +440,8 @@ class SellReturnController extends Controller
                     foreach ($transaction_payments as $payment) {
                         event(new TransactionPaymentDeleted($payment));
                     }
+
+                    $this->transactionUtil->updatePaymentStatus($sell_return->return_parent_id);
                 }
 
                 DB::commit();

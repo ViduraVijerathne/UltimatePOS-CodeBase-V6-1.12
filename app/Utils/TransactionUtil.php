@@ -6066,6 +6066,7 @@ class TransactionUtil extends Util
 
         //Update payment status
         $this->updatePaymentStatus($sell_return->id, $sell_return->final_total);
+        $this->updatePaymentStatus($sell->id, max($sell->final_total - $sell_return->final_total, 0));
 
         //Update quantity returned in sell line
         $returns = [];

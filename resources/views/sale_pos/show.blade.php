@@ -358,6 +358,18 @@
               <td></td>
               <td><span class="display_currency pull-right" data-currency_symbol="true">{{ $sell->final_total }}</span></td>
             </tr>
+            @if(!empty($sell_return_total))
+              <tr>
+                <th>{{ __('lang_v1.sell_return') }}: </th>
+                <td><b>(-)</b></td>
+                <td><span class="display_currency pull-right" data-currency_symbol="true">{{ $sell_return_total }}</span></td>
+              </tr>
+              <tr>
+                <th>{{ __('sale.total_payable') }}: </th>
+                <td></td>
+                <td><span class="display_currency pull-right" data-currency_symbol="true">{{ $net_final_total }}</span></td>
+              </tr>
+            @endif
             @if($sell->type != 'sales_order')
             <tr>
               <th>{{ __('sale.total_paid') }}:</th>
@@ -372,7 +384,7 @@
                 @php
                   $total_paid = (string) $total_paid;
                 @endphp
-                <span class="display_currency pull-right" data-currency_symbol="true" >{{ $sell->final_total - $total_paid }}</span></td>
+                <span class="display_currency pull-right" data-currency_symbol="true" >{{ (!empty($sell_return_total) ? $net_final_total : $sell->final_total) - $total_paid }}</span></td>
             </tr>
             @endif
           </table>

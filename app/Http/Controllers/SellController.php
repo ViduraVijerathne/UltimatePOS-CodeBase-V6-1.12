@@ -458,7 +458,11 @@ class SellController extends Controller
                 ->removeColumn('id')
                 ->editColumn(
                     'final_total',
-                    '<span class="final-total" data-orig-value="{{$final_total}}">@format_currency($final_total)</span>'
+                    function ($row) {
+                        $net_total = max($row->final_total - $row->amount_return, 0);
+
+                        return '<span class="final-total" data-orig-value="'.$net_total.'">'.$this->transactionUtil->num_f($net_total, true).'</span>';
+                    }
                 )
                 ->editColumn(
                     'tax_amount',
@@ -498,7 +502,8 @@ class SellController extends Controller
                     '<span class="service-type-label" data-orig-value="{{$types_of_service_name}}" data-status-name="{{$types_of_service_name}}">{{$types_of_service_name}}</span>'
                 )
                 ->addColumn('total_remaining', function ($row) {
-                    $total_remaining = $row->final_total - $row->total_paid;
+                    $net_total = max($row->final_total - $row->amount_return, 0);
+                    $total_remaining = $net_total - $row->total_paid;
                     $total_remaining_html = '<span class="payment_due" data-orig-value="'.$total_remaining.'">'.$this->transactionUtil->num_f($total_remaining, true).'</span>';
 
                     return $total_remaining_html;
@@ -862,6 +867,11 @@ public function create()
         }
         $status_color_in_activity = Transaction::sales_order_statuses();
         $sales_orders = $sell->salesOrders();
+        $sell_return_total = Transaction::where('business_id', $business_id)
+            ->where('type', 'sell_return')
+            ->where('return_parent_id', $sell->id)
+            ->sum('final_total');
+        $net_final_total = max($sell->final_total - $sell_return_total, 0);
 
         return view('sale_pos.show')
             ->with(compact(
@@ -877,7 +887,9 @@ public function create()
                 'statuses',
                 'status_color_in_activity',
                 'sales_orders',
-                'line_taxes'
+                'line_taxes',
+                'sell_return_total',
+                'net_final_total'
             ));
     }
 
