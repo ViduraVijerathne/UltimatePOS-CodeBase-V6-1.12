@@ -202,6 +202,9 @@ $(document).ready(function() {
                 },
                 select: function(event, ui) {
                     $(this).val(null);
+                    if (increment_existing_purchase_entry_row(ui.item.variation_id)) {
+                        return false;
+                    }
                     get_purchase_entry_row(ui.item.product_id, ui.item.variation_id);
                 },
             })
@@ -754,11 +757,89 @@ function get_purchase_entry_row(product_id, variation_id) {
     }
 }
 
+function increment_existing_purchase_entry_row(variation_id) {
+    if (!variation_id) {
+        return false;
+    }
+
+    var existing_row = null;
+    $('#purchase_entry_table tbody tr').each(function() {
+        var row = $(this);
+        var row_variation_id = row.find('input[name$="[variation_id]"]').val();
+
+        if (
+            row_variation_id == variation_id &&
+            row.find('input[name$="[purchase_order_line_id]"]').length == 0 &&
+            row.find('input[name$="[purchase_requisition_line_id]"]').length == 0
+        ) {
+            existing_row = row;
+            return false;
+        }
+    });
+
+    if (!existing_row) {
+        return false;
+    }
+
+    var quantity_input = existing_row.find('input.purchase_quantity');
+    var quantity = __read_number(quantity_input, true);
+    __write_number(quantity_input, quantity + 1, true);
+    quantity_input.trigger('change').focus();
+
+    return true;
+}
+
+function merge_purchase_entry_row(row) {
+    var variation_id = row.find('input[name$="[variation_id]"]').val();
+    if (
+        !variation_id ||
+        row.find('input[name$="[purchase_order_line_id]"]').length > 0 ||
+        row.find('input[name$="[purchase_requisition_line_id]"]').length > 0
+    ) {
+        return false;
+    }
+
+    var existing_row = null;
+    $('#purchase_entry_table tbody tr').each(function() {
+        var table_row = $(this);
+        var row_variation_id = table_row.find('input[name$="[variation_id]"]').val();
+
+        if (
+            row_variation_id == variation_id &&
+            table_row.find('input[name$="[purchase_order_line_id]"]').length == 0 &&
+            table_row.find('input[name$="[purchase_requisition_line_id]"]').length == 0
+        ) {
+            existing_row = table_row;
+            return false;
+        }
+    });
+
+    if (!existing_row) {
+        return false;
+    }
+
+    var quantity_input = existing_row.find('input.purchase_quantity');
+    var existing_quantity = __read_number(quantity_input, true);
+    var added_quantity = __read_number(row.find('input.purchase_quantity'), true);
+
+    __write_number(quantity_input, existing_quantity + added_quantity, true);
+    quantity_input.trigger('change').focus();
+
+    return true;
+}
+
 function append_purchase_lines(data, row_count, trigger_change = false) {
     $(data)
         .find('.purchase_quantity')
         .each(function() {
             row = $(this).closest('tr');
+
+            if (merge_purchase_entry_row(row)) {
+                update_table_total();
+                update_grand_total();
+                update_table_sr_number();
+                return true;
+            }
 
             $('#purchase_entry_table tbody').append(
                 update_purchase_entry_row_values(row)
@@ -1345,5 +1426,3 @@ $("#purchase_requisition_ids").on("select2:unselect", function (e) {
         }
     });
 });
-
-
