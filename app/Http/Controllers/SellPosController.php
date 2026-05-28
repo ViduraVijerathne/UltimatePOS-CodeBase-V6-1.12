@@ -332,6 +332,7 @@ class SellPosController extends Controller
                 $input['status'] = 'draft';
                 $input['sub_status'] = 'proforma';
             }
+            $input['decrease_stock_for_draft'] = $this->shouldDecreaseStockForDraftInput($input);
 
             //Add change return
             $change_return = $this->dummyPaymentLine;
@@ -486,6 +487,10 @@ class SellPosController extends Controller
                 Media::uploadMedia($business_id, $transaction, $request, 'shipping_documents', false, 'shipping_document');
 
                 $this->transactionUtil->createOrUpdateSellLines($transaction, $input['products'], $input['location_id']);
+
+                if (!empty($input['decrease_stock_for_draft'])) {
+                    $this->productUtil->adjustProductStockForInvoice('draft', $transaction, $input);
+                }
 
                 $change_return['amount'] = $input['change_return'] ?? 0;
                 $change_return['is_return'] = 1;
@@ -1118,6 +1123,7 @@ class SellPosController extends Controller
                 $input['sub_status'] = null;
                 $input['is_quotation'] = 0;
             }
+            $input['decrease_stock_for_draft'] = $this->shouldDecreaseStockForDraftInput($input);
 
             $is_direct_sale = false;
             if (!empty($input['products'])) {
@@ -1126,6 +1132,7 @@ class SellPosController extends Controller
                 $status_before = $transaction_before->status;
                 $rp_earned_before = $transaction_before->rp_earned;
                 $rp_redeemed_before = $transaction_before->rp_redeemed;
+                $input['stock_affected_before'] = $this->isStockDecreasingDraft($transaction_before);
 
                 if ($transaction_before->is_direct_sale == 1) {
                     $is_direct_sale = true;
@@ -1329,7 +1336,8 @@ class SellPosController extends Controller
                 }
 
                 //Update Sell lines
-                $deleted_lines = $this->transactionUtil->createOrUpdateSellLines($transaction, $input['products'], $input['location_id'], true, $status_before);
+                $stock_status_before = !empty($input['stock_affected_before']) ? 'final' : $status_before;
+                $deleted_lines = $this->transactionUtil->createOrUpdateSellLines($transaction, $input['products'], $input['location_id'], true, $stock_status_before);
 
                 //Update update lines
                 $is_credit_sale = isset($input['is_credit_sale']) && $input['is_credit_sale'] == 1 ? true : false;
@@ -2866,42 +2874,45 @@ public function printAllDraftInvoices(Request $request)
             $transaction->status = 'final';
             $transaction->sub_status = null;
             $transaction->is_quotation = 0;
+            $transaction->decrease_stock_for_draft = 0;
             $transaction->save();
 
-            //update product stock
-            foreach ($transaction->sell_lines as $sell_line) {
-                $decrease_qty = $sell_line->quantity;
+            if (!$this->isStockDecreasingDraft($transaction_before)) {
+                //update product stock
+                foreach ($transaction->sell_lines as $sell_line) {
+                    $decrease_qty = $sell_line->quantity;
 
-                if ($sell_line->product->enable_stock == 1) {
-                    $this->productUtil->decreaseProductQuantity(
-                        $sell_line->product_id,
-                        $sell_line->variation_id,
-                        $transaction->location_id,
-                        $decrease_qty
-                    );
-                }
-
-                if ($sell_line->product->type == 'combo') {
-                    //Decrease quantity of combo as well.
-                    $combo_variations = $sell_line->variations->combo_variations;
-
-                    foreach ($combo_variations as $key => $value) {
-                        $base_unit_multiplier = 1;
-
-                        if (!empty($value['unit_id'])) {
-                            $unit = Unit::find($value['unit_id']);
-                            $base_unit_multiplier = !empty($unit->base_unit_multiplier) ? $unit->base_unit_multiplier : $base_unit_multiplier;
-                        }
-
-                        $combo_variations[$key]['product_id'] = $sell_line->product_id;
-                        $combo_variations[$key]['product_id'] = $sell_line->product_id;
-                        $combo_variations[$key]['quantity'] = $value['quantity'] * $decrease_qty * $base_unit_multiplier;
-                    }
-                    $this->productUtil
-                        ->decreaseProductQuantityCombo(
-                            $combo_variations,
-                            $transaction->location_id
+                    if ($sell_line->product->enable_stock == 1) {
+                        $this->productUtil->decreaseProductQuantity(
+                            $sell_line->product_id,
+                            $sell_line->variation_id,
+                            $transaction->location_id,
+                            $decrease_qty
                         );
+                    }
+
+                    if ($sell_line->product->type == 'combo') {
+                        //Decrease quantity of combo as well.
+                        $combo_variations = $sell_line->variations->combo_variations;
+
+                        foreach ($combo_variations as $key => $value) {
+                            $base_unit_multiplier = 1;
+
+                            if (!empty($value['unit_id'])) {
+                                $unit = Unit::find($value['unit_id']);
+                                $base_unit_multiplier = !empty($unit->base_unit_multiplier) ? $unit->base_unit_multiplier : $base_unit_multiplier;
+                            }
+
+                            $combo_variations[$key]['product_id'] = $sell_line->product_id;
+                            $combo_variations[$key]['product_id'] = $sell_line->product_id;
+                            $combo_variations[$key]['quantity'] = $value['quantity'] * $decrease_qty * $base_unit_multiplier;
+                        }
+                        $this->productUtil
+                            ->decreaseProductQuantityCombo(
+                                $combo_variations,
+                                $transaction->location_id
+                            );
+                    }
                 }
             }
 
@@ -3330,5 +3341,20 @@ public function printAllDraftInvoices(Request $request)
             return $output;
 
         }
+    }
+
+    private function shouldDecreaseStockForDraftInput($input)
+    {
+        return isset($input['status'])
+            && $input['status'] == 'draft'
+            && empty($input['is_quotation'])
+            && empty($input['sub_status']);
+    }
+
+    private function isStockDecreasingDraft($transaction)
+    {
+        return !empty($transaction)
+            && $transaction->status == 'draft'
+            && !empty($transaction->decrease_stock_for_draft);
     }
 }

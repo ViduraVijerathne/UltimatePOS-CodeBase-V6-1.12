@@ -103,6 +103,7 @@ class TransactionUtil extends Util
             'pay_term_number' => $pay_term_number,
             'pay_term_type' => $pay_term_type,
             'is_suspend' => ! empty($input['is_suspend']) ? 1 : 0,
+            'decrease_stock_for_draft' => ! empty($input['decrease_stock_for_draft']) ? 1 : 0,
             'is_recurring' => ! empty($input['is_recurring']) ? $input['is_recurring'] : 0,
             'recur_interval' => ! empty($input['recur_interval']) ? $input['recur_interval'] : 1,
             'recur_interval_type' => ! empty($input['recur_interval_type']) ? $input['recur_interval_type'] : null,
@@ -226,6 +227,7 @@ class TransactionUtil extends Util
             'pay_term_number' => $pay_term_number,
             'pay_term_type' => $pay_term_type,
             'is_suspend' => ! empty($input['is_suspend']) ? 1 : 0,
+            'decrease_stock_for_draft' => ! empty($input['decrease_stock_for_draft']) ? 1 : 0,
             'is_recurring' => ! empty($input['is_recurring']) ? $input['is_recurring'] : 0,
             'recur_interval' => ! empty($input['recur_interval']) ? $input['recur_interval'] : 1,
             'recur_interval_type' => ! empty($input['recur_interval_type']) ? $input['recur_interval_type'] : null,
@@ -4821,9 +4823,20 @@ class TransactionUtil extends Util
 
             //If status is draft direct delete transaction
             if ($transaction->status == 'draft') {
-                foreach ($transaction->sell_lines as $sell_line) {
-                    $this->updateSalesOrderLine($sell_line->so_line_id, 0, $sell_line->quantity);
+                $decrease_stock_for_draft = ! empty($transaction->decrease_stock_for_draft);
+
+                if ($decrease_stock_for_draft) {
+                    $deleted_sell_lines_ids = $transaction->sell_lines->pluck('id')->toArray();
+                    $this->deleteSellLines(
+                        $deleted_sell_lines_ids,
+                        $transaction->location_id
+                    );
+                } else {
+                    foreach ($transaction->sell_lines as $sell_line) {
+                        $this->updateSalesOrderLine($sell_line->so_line_id, 0, $sell_line->quantity);
+                    }
                 }
+
                 $sales_order_ids = $transaction->sales_order_ids ?? [];
                 if (! empty($sales_order_ids)) {
                     $this->updateSalesOrderStatus($sales_order_ids);

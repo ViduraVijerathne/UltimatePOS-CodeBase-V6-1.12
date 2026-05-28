@@ -820,7 +820,10 @@ class ProductUtil extends Util
      */
     public function adjustProductStockForInvoice($status_before, $transaction, $input, $uf_data = true)
     {
-        if ($status_before == 'final' && $transaction->status == 'draft') {
+        $stock_affected_before = $status_before == 'final' || ! empty($input['stock_affected_before']);
+        $stock_affected_after = $transaction->status == 'final' || ! empty($input['decrease_stock_for_draft']);
+
+        if ($stock_affected_before && ! $stock_affected_after) {
             foreach ($input['products'] as $product) {
                 if (! empty($product['transaction_sell_lines_id'])) {
                     $this->updateProductQuantity($input['location_id'], $product['product_id'], $product['variation_id'], $product['quantity'], 0, null, false);
@@ -836,7 +839,7 @@ class ProductUtil extends Util
                     }
                 }
             }
-        } elseif ($status_before == 'draft' && $transaction->status == 'final') {
+        } elseif (! $stock_affected_before && $stock_affected_after) {
             foreach ($input['products'] as $product) {
                 $uf_quantity = $uf_data ? $this->num_uf($product['quantity']) : $product['quantity'];
 
@@ -854,7 +857,7 @@ class ProductUtil extends Util
                     //$this->decreaseProductQuantityCombo($product['variation_id'], $input['location_id'], $uf_quantity);
                 }
             }
-        } elseif ($status_before == 'final' && $transaction->status == 'final') {
+        } elseif ($stock_affected_before && $stock_affected_after) {
             foreach ($input['products'] as $product) {
                 if (empty($product['transaction_sell_lines_id'])) {
                     $uf_quantity = $uf_data ? $this->num_uf($product['quantity']) : $product['quantity'];
