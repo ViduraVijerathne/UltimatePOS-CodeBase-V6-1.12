@@ -634,6 +634,8 @@ class SellPosController extends Controller
                 }
 
                 if ($print_invoice) {
+                    $transaction->load('location');
+                    $invoice_layout_id = $this->getInvoiceLayoutIdForTransaction($transaction);
                     $receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id, null, false, true, $invoice_layout_id);
                 }
 
@@ -776,6 +778,25 @@ class SellPosController extends Controller
         }
 
         return $output;
+    }
+
+    private function getInvoiceLayoutIdForTransaction(Transaction $transaction)
+    {
+        if (!$transaction->relationLoaded('location')) {
+            $transaction->load('location');
+        }
+
+        if (empty($transaction->location)) {
+            return null;
+        }
+
+        if ($transaction->status == 'draft' && empty($transaction->is_quotation)) {
+            return $transaction->location->invoice_layout_id;
+        }
+
+        return !empty($transaction->location->sale_invoice_layout_id)
+            ? $transaction->location->sale_invoice_layout_id
+            : $transaction->location->invoice_layout_id;
     }
 
     /**
@@ -1278,6 +1299,8 @@ class SellPosController extends Controller
                     $can_print_invoice = auth()->user()->can('print_invoice');
                     $invoice_layout_id = $request->input('invoice_layout_id');
 
+                    $transaction_before->load('location');
+                    $invoice_layout_id = $this->getInvoiceLayoutIdForTransaction($transaction_before);
                     $receipt = $this->receiptContent($business_id, $input['location_id'], $transaction_before->id, null, false, true, $invoice_layout_id);
                     $msg = trans('purchase.payment_updated_success');
 
@@ -1435,6 +1458,8 @@ class SellPosController extends Controller
                 } elseif ($input['status'] == 'draft' && $input['is_quotation'] == 1) {
                     $msg = trans('lang_v1.quotation_updated');
                     if (!$is_direct_sale && $can_print_invoice) {
+                        $transaction->load('location');
+                        $invoice_layout_id = $this->getInvoiceLayoutIdForTransaction($transaction);
                         $receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id, null, false, true, $invoice_layout_id);
                     } else {
                         $receipt = '';
@@ -1442,6 +1467,8 @@ class SellPosController extends Controller
                 } elseif ($input['status'] == 'final') {
                     $msg = trans('sale.pos_sale_updated');
                     if (!$is_direct_sale && $can_print_invoice) {
+                        $transaction->load('location');
+                        $invoice_layout_id = $this->getInvoiceLayoutIdForTransaction($transaction);
                         $receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id, null, false, true, $invoice_layout_id);
                     } else {
                         $receipt = '';
@@ -1900,7 +1927,7 @@ class SellPosController extends Controller
                 $is_package_slip = !empty($request->input('package_slip')) ? true : false;
                 $is_delivery_note = !empty($request->input('delivery_note')) ? true : false;
 
-                $invoice_layout_id = $transaction->is_direct_sale ? $transaction->location->sale_invoice_layout_id : null;
+                $invoice_layout_id = $this->getInvoiceLayoutIdForTransaction($transaction);
                 $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $is_delivery_note);
 
                 if (!empty($receipt)) {
@@ -2193,7 +2220,7 @@ public function printAllDraftInvoices(Request $request)
         $transaction = Transaction::where('invoice_token', $token)->with(['business', 'location'])->first();
 
         if (!empty($transaction)) {
-            $invoice_layout_id = $transaction->is_direct_sale ? $transaction->location->sale_invoice_layout_id : null;
+            $invoice_layout_id = $this->getInvoiceLayoutIdForTransaction($transaction);
 
             $receipt = $this->receiptContent($transaction->business_id, $transaction->location_id, $transaction->id, 'browser', false, false, $invoice_layout_id);
             $pos_settings = empty($transaction->business->pos_settings) ? $this->businessUtil->defaultPosSettings() : json_decode($transaction->business->pos_settings, true);

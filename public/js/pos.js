@@ -48,6 +48,11 @@ $(document).ready(function() {
         //Set default invoice layout for location
         if ($('#invoice_layout_id').length) {
             let invoice_layout_id = $(this).find(':selected').data('default_invoice_layout_id');
+            if ($('input[name="is_direct_sale"]').length > 0) {
+                invoice_layout_id =
+                    $(this).find(':selected').data('default_sale_invoice_layout_id') ||
+                    invoice_layout_id;
+            }
             $("#invoice_layout_id").val(invoice_layout_id).change();
         }
         

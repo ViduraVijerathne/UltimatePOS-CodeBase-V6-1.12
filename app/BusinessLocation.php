@@ -51,6 +51,7 @@ class BusinessLocation extends Model
                 'default_payment_accounts',
                 'invoice_scheme_id',
                 'invoice_layout_id',
+                'sale_invoice_layout_id',
                 'sale_invoice_scheme_id'
             );
         }
@@ -80,6 +81,7 @@ class BusinessLocation extends Model
                     'data-default_sale_invoice_scheme_id' => $item->sale_invoice_scheme_id,
                     'data-default_invoice_scheme_id' => $item->invoice_scheme_id,
                     'data-default_invoice_layout_id' => $item->invoice_layout_id,
+                    'data-default_sale_invoice_layout_id' => $item->sale_invoice_layout_id,
                 ],
                 ];
             })->all();
