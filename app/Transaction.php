@@ -131,6 +131,11 @@ class Transaction extends Model
         return $this->belongsTo(\App\TypesOfService::class, 'types_of_service_id');
     }
 
+    public function tenant_invoice_api_sync()
+    {
+        return $this->hasOne(\App\TenantInvoiceApiSync::class, 'transaction_id');
+    }
+
     /**
      * Retrieves documents path if exists
      */

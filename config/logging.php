@@ -70,6 +70,13 @@ return [
             'days' => 14,
         ],
 
+        'tenant_invoice_api' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/tenant_invoice_api.log'),
+            'level' => env('TENANT_INVOICE_API_LOG_LEVEL', 'info'),
+            'replace_placeholders' => true,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
