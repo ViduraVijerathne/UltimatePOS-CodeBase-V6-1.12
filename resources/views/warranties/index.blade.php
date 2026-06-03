@@ -50,7 +50,6 @@
             var warranty_table = $('#warranty_table').DataTable({
                 processing: true,
                 serverSide: true,
-                fixedHeader:false,
                 ajax: "{{ action([\App\Http\Controllers\WarrantyController::class, 'index']) }}",
                 columnDefs: [{
                     "targets": 3,

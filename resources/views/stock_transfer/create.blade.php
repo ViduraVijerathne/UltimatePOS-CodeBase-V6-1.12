@@ -106,10 +106,10 @@
                                     <th class="col-sm-2 text-center">
                                         @lang('sale.qty')
                                     </th>
-                                    <th class="col-sm-2 text-center show_price_with_permission">
+                                    <th class="col-sm-2 text-center">
                                         @lang('sale.unit_price')
                                     </th>
-                                    <th class="col-sm-2 text-center show_price_with_permission">
+                                    <th class="col-sm-2 text-center">
                                         @lang('sale.subtotal')
                                     </th>
                                     <th class="col-sm-2 text-center"><i class="fa fa-trash" aria-hidden="true"></i></th>
@@ -118,10 +118,10 @@
                             <tbody>
                             </tbody>
                             <tfoot>
-                                <tr class="text-center show_price_with_permission">
+                                <tr class="text-center">
                                     <td colspan="3"></td>
                                     <td>
-                                        <div class="pull-right"><b>@lang('sale.total'): </b> <span
+                                        <div class="pull-right"><b>@lang('sale.total'):</b> <span
                                                 id="total_adjustment">0.00</span></div>
                                     </td>
                                 </tr>
@@ -152,7 +152,7 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-12 text-right show_price_with_permission">
+                <div class="col-md-12 text-right">
                     <b>@lang('stock_adjustment.total_amount'):</b> <span id="final_total_text">0.00</span>
                 </div>
                 <br>
@@ -172,12 +172,3 @@
         __page_leave_confirmation('#stock_transfer_form');
     </script>
 @endsection
-
-
-@cannot('view_purchase_price')
-    <style>
-        .show_price_with_permission {
-            display: none !important;
-        }
-    </style>
-@endcannot

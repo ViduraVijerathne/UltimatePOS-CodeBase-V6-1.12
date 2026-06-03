@@ -103,7 +103,6 @@
                 ],
                 scrollY: "75vh",
                 scrollX: true,
-                fixedHeader:false,
                 scrollCollapse: true,
                 ajax: {
                     url: '{{ action([\App\Http\Controllers\PurchaseRequisitionController::class, 'index']) }}',

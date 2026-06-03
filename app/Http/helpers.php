@@ -39,7 +39,7 @@ function pos_boot($ul, $pt, $lc, $em, $un, $type = 1, $pid = null)
     if ($result) {
         $result = json_decode($result, true);
 
-        if ($result['flag'] == 'valid' || true) {
+        if ($result['flag'] == 'valid') {
             // if(!empty($result['data'])){
             //     $this->_handle_data($result['data']);
             // }

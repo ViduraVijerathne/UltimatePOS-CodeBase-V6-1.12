@@ -44,7 +44,4 @@ return [
     'price' => 'ລາຄາ',
     'activate' => 'ໃຊ້ງານ',
     'deactivate' => 'ບໍ່ໃຊ້ງານ',
-    'print_detailed' => 'ພິມລະອຽດ',
-    'print_mini' => 'ພິມຂະຫນາດນ້ອຍ',
-    'opening' => 'ເປີດ',
 ];

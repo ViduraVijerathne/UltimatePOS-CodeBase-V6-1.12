@@ -113,7 +113,7 @@
                                         <path d="M12 17l0 .01" />
                                         <path d="M12 13.5a1.5 1.5 0 0 1 1 -1.5a2.6 2.6 0 1 0 -3 -4" />
                                     </svg>
-                                    @lang('lang_v1.application_tour')
+                                    Application Tour
                                 </a>
                             @endif
                         </div>
@@ -122,10 +122,8 @@
                 </details>
 
 
-                {{-- data-toggle="popover" remove this for on hover show --}}
-
                 <button id="btnCalculator" title="@lang('lang_v1.calculator')" data-content='@include('layouts.partials.calculator')'
-                    type="button" data-trigger="click" data-html="true" data-placement="bottom" 
+                    type="button" data-trigger="click" data-html="true" data-placement="bottom"
                     class="tw-hidden md:tw-inline-flex tw-items-center tw-justify-center tw-text-sm tw-font-medium tw-text-white tw-transition-all tw-duration-200 tw-bg-@if(!empty(session('business.theme_color'))){{session('business.theme_color')}}@else{{'primary'}}@endif-800 hover:tw-bg-@if(!empty(session('business.theme_color'))){{session('business.theme_color')}}@else{{'primary'}}@endif-700 tw-p-1.5 tw-rounded-lg tw-ring-1 hover:tw-text-white tw-ring-white/10">
                     <span class="tw-sr-only" aria-hidden="true">
                         Calculator
@@ -194,7 +192,7 @@
 
 
                 <details class="tw-dw-dropdown tw-relative tw-inline-block tw-text-left">
-                    <summary data-toggle="popover"
+                    <summary
                         class="tw-dw-m-1 tw-inline-flex tw-transition-all tw-ring-1 tw-ring-white/10 tw-cursor-pointer tw-duration-200 tw-bg-@if(!empty(session('business.theme_color'))){{session('business.theme_color')}}@else{{'primary'}}@endif-800 hover:tw-bg-@if(!empty(session('business.theme_color'))){{session('business.theme_color')}}@else{{'primary'}}@endif-700 tw-py-1.5 tw-px-3 tw-rounded-lg tw-items-center tw-justify-center tw-text-sm tw-font-medium tw-text-white hover:tw-text-white tw-gap-1">
                         <span class="tw-hidden md:tw-block">{{ Auth::User()->first_name }} {{ Auth::User()->last_name }}</span>
 
@@ -208,7 +206,7 @@
                         role="menu" tabindex="-1">
                         <div class="tw-px-4 tw-pt-3 tw-pb-1" role="none">
                             <p class="tw-text-sm" role="none">
-                                @lang('lang_v1.signed_in_as')
+                                Signed in as
                             </p>
                             <p class="tw-text-sm tw-font-medium tw-text-gray-900 tw-truncate" role="none">
                                 {{ Auth::User()->first_name }} {{ Auth::User()->last_name }}

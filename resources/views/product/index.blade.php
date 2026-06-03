@@ -230,7 +230,6 @@
             product_table = $('#product_table').DataTable({
                 processing: true,
                 serverSide: true,
-                fixedHeader:false,
                 aaSorting: [
                     [3, 'asc']
                 ],
@@ -721,7 +720,6 @@
                         scrollY: "75vh",
                         scrollX: true,
                         scrollCollapse: true,
-                        fixedHeader:false,
                         ajax: {
                             url: '/reports/stock-report',
                             data: function(d) {

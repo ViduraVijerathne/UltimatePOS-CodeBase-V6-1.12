@@ -113,6 +113,7 @@
 							<small><p class="help-block hide" id="price_group_text">@lang('lang_v1.price_group'): <span></span></p></small>
 						</div>
 					</div>
+					<div class="modal fade types_of_service_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel"></div>
 				@endif
 				
 				@if(in_array('subscription', $enabled_modules))
@@ -349,9 +350,24 @@
 			@endcomponent
 
 			@component('components.widget', ['class' => 'box-solid'])
-				
+				<div class="col-sm-10 col-sm-offset-1">
+					<div class="form-group">
+						<div class="input-group">
+							<div class="input-group-btn">
+								<button type="button" class="btn btn-default bg-white btn-flat" data-toggle="modal" data-target="#configure_search_modal" title="{{__('lang_v1.configure_product_search')}}"><i class="fas fa-search-plus"></i></button>
+							</div>
+							{!! Form::text('search_product', null, ['class' => 'form-control mousetrap', 'id' => 'search_product', 'placeholder' => __('lang_v1.search_product_placeholder'),
+							'disabled' => is_null($default_location)? true : false,
+							'autofocus' => is_null($default_location)? false : true,
+							]); !!}
+							<span class="input-group-btn">
+								<button type="button" class="btn btn-default bg-white btn-flat pos_add_quick_product" data-href="{{action([\App\Http\Controllers\ProductController::class, 'quickAdd'])}}" data-container=".quick_add_product_modal"><i class="fa fa-plus-circle text-primary fa-lg"></i></button>
+							</span>
+						</div>
+					</div>
+				</div>
 
-				<div class="row col-sm-12"
+				<div class="row col-sm-12 pos_product_div" style="min-height: 0">
 
 					<input type="hidden" name="sell_price_tax" id="sell_price_tax" value="{{$business_details->sell_price_tax}}">
 
@@ -368,7 +384,6 @@
 					<table class="table table-condensed table-bordered table-striped table-responsive" id="pos_table">
 						<thead>
 							<tr>
-								<th class="text-center">#</th>
 								<th class="text-center">	
 									@lang('sale.product')
 								</th>
@@ -418,22 +433,6 @@
 							</td>
 						</tr>
 					</table>
-					</div>
-				</div>
-				<div class="col-sm-10 col-sm-offset-1">
-					<div class="form-group">
-						<div class="input-group">
-							<div class="input-group-btn">
-								<button type="button" class="btn btn-default bg-white btn-flat" data-toggle="modal" data-target="#configure_search_modal" title="{{__('lang_v1.configure_product_search')}}"><i class="fas fa-search-plus"></i></button>
-							</div>
-							{!! Form::text('search_product', null, ['class' => 'form-control mousetrap', 'id' => 'search_product', 'placeholder' => __('lang_v1.search_product_placeholder'),
-							'disabled' => is_null($default_location)? true : false,
-							'autofocus' => is_null($default_location)? false : true,
-							]); !!}
-							<span class="input-group-btn">
-								<button type="button" class="btn btn-default bg-white btn-flat pos_add_quick_product" data-href="{{action([\App\Http\Controllers\ProductController::class, 'quickAdd'])}}" data-container=".quick_add_product_modal"><i class="fa fa-plus-circle text-primary fa-lg"></i></button>
-							</span>
-						</div>
 					</div>
 				</div>
 			@endcomponent
@@ -529,7 +528,6 @@
 					</div>
 			    </div>
 				<input type="hidden" name="is_direct_sale" value="1">
-				<input type="hidden" name="is_serial_no" value="1">
 			@endcomponent
 			@component('components.widget', ['class' => 'box-solid'])
 			<div class="col-md-4">
@@ -905,9 +903,6 @@
 
 <!-- quick product modal -->
 <div class="modal fade quick_add_product_modal" tabindex="-1" role="dialog" aria-labelledby="modalTitle"></div>
-
-<div class="modal fade types_of_service_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel"></div>
-
 
 @include('sale_pos.partials.configure_search_modal')
 

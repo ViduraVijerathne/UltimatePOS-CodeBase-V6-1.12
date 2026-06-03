@@ -44,7 +44,4 @@ return [
     'price' => 'Fiyat',
     'activate' => 'Etkinleştir',
     'deactivate' => 'Devre Dışı Bırak',
-    'print_detailed' => 'Ayrıntılı Yazdır',
-    'print_mini' => 'Mini Yazdır',
-    'opening' => 'Açılış',
 ];

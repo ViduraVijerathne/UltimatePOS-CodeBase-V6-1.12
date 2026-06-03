@@ -44,7 +44,4 @@ return [
     'price' => 'بیه',
     'activate' => 'فعال کړئ',
     'deactivate' => 'غیر فعاله کړئ',
-    'print_detailed' => 'تفصيلي چاپ',
-    'print_mini' => 'ميني چاپ',
-    'opening' => 'پرانيسته',
 ];

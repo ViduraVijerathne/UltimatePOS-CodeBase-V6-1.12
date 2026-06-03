@@ -33,7 +33,6 @@ $(document).ready(function() {
     supplier_report_tbl = $('#supplier_report_tbl').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         ajax: {
             url: '/reports/customer-supplier',
             data: function(d) {
@@ -129,7 +128,6 @@ $(document).ready(function() {
     //Stock report table
     stock_report_table = $('#stock_report_table').DataTable({
         processing: true,
-        fixedHeader:false,
         order: [[1, 'asc']],
         serverSide: true,
         scrollY: "75vh",
@@ -295,7 +293,6 @@ $(document).ready(function() {
         scrollY:        "75vh",
         scrollX:        true,
         scrollCollapse: true,
-        fixedHeader:false,
         ajax: '/reports/register-report',
         columns: [
             { data: 'created_at', name: 'created_at' },
@@ -440,7 +437,6 @@ $(document).ready(function() {
             $('table#sr_payments_with_commission_table').DataTable({
                 processing: true,
                 serverSide: true,
-                fixedHeader:false,
                 aaSorting: [[1, 'desc']],
                 ajax: {
                     url: '/reports/sell-payment-report',
@@ -480,7 +476,6 @@ $(document).ready(function() {
         sr_sales_report = $('table#sr_sales_report').DataTable({
             processing: true,
             serverSide: true,
-            fixedHeader:false,
             aaSorting: [[0, 'desc']],
             ajax: {
                 url: '/sells',
@@ -539,7 +534,6 @@ $(document).ready(function() {
         sr_expenses_report = $('table#sr_expenses_report').DataTable({
             processing: true,
             serverSide: true,
-            fixedHeader:false,
             aaSorting: [[0, 'desc']],
             ajax: {
                 url: '/expenses',
@@ -588,7 +582,6 @@ $(document).ready(function() {
         sr_sales_commission_report = $('table#sr_sales_with_commission_table').DataTable({
             processing: true,
             serverSide: true,
-            fixedHeader:false,
             aaSorting: [[0, 'desc']],
             ajax: {
                 url: '/sells',
@@ -656,7 +649,6 @@ $(document).ready(function() {
     stock_expiry_report_table = $('table#stock_expiry_report_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         ajax: {
             url: '/reports/stock-expiry',
             data: function(d) {
@@ -772,7 +764,6 @@ $(document).ready(function() {
     product_purchase_report = $('table#product_purchase_report_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         aaSorting: [[3, 'desc']],
         ajax: {
             url: '/reports/product-purchase-report',
@@ -891,7 +882,6 @@ $(document).ready(function() {
         product_sell_report = $('table#product_sell_report_table').DataTable({
             processing: true,
             serverSide: true,
-            fixedHeader:false,
             aaSorting: [[6, 'desc']],
             ajax: {
                 url: '/reports/product-sell-report',
@@ -930,8 +920,6 @@ $(document).ready(function() {
                 { data: 'product_custom_field2', name: 'p.product_custom_field2', "visible": $('#psr_product_custom_field2').html().trim().length > 0},
                 { data: 'customer', name: 'c.name' },
                 { data: 'contact_id', name: 'c.contact_id' },
-                { data: 'contact_no', name: 'c.mobile' },
-                { data: 'contact_email', name: 'c.email' },
                 { data: 'invoice_no', name: 't.invoice_no' },
                 { data: 'transaction_date', name: 't.transaction_date' },
                 { data: 'sell_qty', name: 'transaction_sell_lines.quantity' },
@@ -957,7 +945,6 @@ $(document).ready(function() {
     product_sell_report_with_purchase_table = $('table#product_sell_report_with_purchase_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         aaSorting: [[4, 'desc']],
         ajax: {
             url: '/reports/product-sell-report-with-purchase',
@@ -992,8 +979,6 @@ $(document).ready(function() {
             { data: 'product_name', name: 'p.name' },
             { data: 'sub_sku', name: 'v.sub_sku' },
             { data: 'customer', name: 'c.name' },
-            { data: 'contact_no', name: 'c.mobile' },
-            { data: 'contact_email', name: 'c.email' },
             { data: 'invoice_no', name: 't.invoice_no' },
             { data: 'transaction_date', name: 't.transaction_date' },
             { data: 'ref_no', name: 'purchase.ref_no' },
@@ -1009,7 +994,6 @@ $(document).ready(function() {
     product_sell_grouped_report = $('table#product_sell_grouped_report_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         aaSorting: [[1, 'desc']],
         ajax: {
             url: '/reports/product-sell-grouped-report',
@@ -1108,7 +1092,6 @@ $(document).ready(function() {
     lot_report = $('table#lot_report').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         // aaSorting: [[3, 'desc']],
 
         ajax: {
@@ -1152,7 +1135,6 @@ $(document).ready(function() {
     purchase_payment_report = $('table#purchase_payment_report_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         aaSorting: [[2, 'desc']],
         ajax: {
             url: '/reports/purchase-payment-report',
@@ -1258,7 +1240,6 @@ $(document).ready(function() {
     sell_payment_report = $('table#sell_payment_report_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         aaSorting: [[2, 'desc']],
         ajax: {
             url: '/reports/sell-payment-report',
@@ -1291,8 +1272,7 @@ $(document).ready(function() {
             { data: 'payment_ref_no', name: 'payment_ref_no' },
             { data: 'paid_on', name: 'paid_on' },
             { data: 'amount', name: 'transaction_payments.amount' },
-            { data: 'customer', name: 'customer_subquery.customer_name', orderable: false, searchable: true},
-            { data: 'contact_id', name:'c.contact_id', orderable: true, searchable: true },
+            { data: 'customer', orderable: false, searchable: false },
             { data: 'customer_group', name: 'customer_group', searchable: false},
             { data: 'method', name: 'method' },
             { data: 'invoice_no', name: 't.invoice_no' },
@@ -1391,7 +1371,6 @@ $(document).ready(function() {
     items_report_table = $('#items_report_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         ajax: {
             url: '/reports/items-report',
             data: function(d) {

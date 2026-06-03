@@ -51,7 +51,7 @@ class StockTransferController extends Controller
      */
     public function index()
     {
-        if (! auth()->user()->can('stock_transfer.view') && ! auth()->user()->can('stock_transfer.create') && ! auth()->user()->can('stock_transfer.view_own')) {
+        if (! auth()->user()->can('purchase.view') && ! auth()->user()->can('purchase.create')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -75,13 +75,8 @@ class StockTransferController extends Controller
                         'l2.id'
                     )
                     ->where('transactions.business_id', $business_id)
-                    ->where('transactions.type', 'sell_transfer');
-
-                    if (! auth()->user()->can('stock_transfer.view') && auth()->user()->can('stock_transfer.view_own')) {
-                        $stock_transfers->where('t2.created_by', request()->session()->get('user.id'));
-                    }
-
-                    $stock_transfers->select(
+                    ->where('transactions.type', 'sell_transfer')
+                    ->select(
                         'transactions.id',
                         'transactions.transaction_date',
                         'transactions.ref_no',
@@ -94,14 +89,9 @@ class StockTransferController extends Controller
                         'transactions.status'
                     );
 
-
-
             return Datatables::of($stock_transfers)
                 ->addColumn('action', function ($row) use ($edit_days) {
-                    $html = '';
-                    if (auth()->user()->can('stock_transfer.view') || auth()->user()->can('stock_transfer.view_own')) {
-                        $html .= '<button type="button" title="'.__('stock_adjustment.view_details').'" class="tw-dw-btn tw-dw-btn-xs tw-dw-btn-outline  tw-dw-btn-accent btn-modal" data-container=".view_modal" data-href="'.action([\App\Http\Controllers\StockTransferController::class, 'show'], [$row->id]).'"><i class="fa fa-eye" aria-hidden="true"></i> '.__('messages.view').'</button>';
-                    }
+                    $html = '<button type="button" title="'.__('stock_adjustment.view_details').'" class="tw-dw-btn tw-dw-btn-xs tw-dw-btn-outline  tw-dw-btn-accent btn-modal" data-container=".view_modal" data-href="'.action([\App\Http\Controllers\StockTransferController::class, 'show'], [$row->id]).'"><i class="fa fa-eye" aria-hidden="true"></i> '.__('messages.view').'</button>';
 
                     $html .= ' <a href="#" class="print-invoice tw-dw-btn tw-dw-btn-xs tw-dw-btn-outline  tw-dw-btn-info" data-href="'.action([\App\Http\Controllers\StockTransferController::class, 'printInvoice'], [$row->id]).'"><i class="fa fa-print" aria-hidden="true"></i> '.__('messages.print').'</a>';
 
@@ -109,12 +99,12 @@ class StockTransferController extends Controller
                         ->addDays($edit_days);
                     $today = today();
 
-                    if ($date->gte($today) && auth()->user()->can('stock_transfer.delete')) {
+                    if ($date->gte($today)) {
                         $html .= '&nbsp;
                         <button type="button" data-href="'.action([\App\Http\Controllers\StockTransferController::class, 'destroy'], [$row->id]).'" class="tw-dw-btn tw-dw-btn-xs tw-dw-btn-outline  tw-dw-btn-error delete_stock_transfer"><i class="fa fa-trash" aria-hidden="true"></i> '.__('messages.delete').'</button>';
                     }
 
-                    if ($row->status != 'final' && auth()->user()->can('stock_transfer.update')) {
+                    if ($row->status != 'final') {
                         $html .= '&nbsp;
                         <a href="'.action([\App\Http\Controllers\StockTransferController::class, 'edit'], [$row->id]).'" class="tw-dw-btn tw-dw-btn-xs tw-dw-btn-outline  tw-dw-btn-primary"><i class="fa fa-edit" aria-hidden="true"></i> '.__('messages.edit').'</a>';
                     }
@@ -123,13 +113,7 @@ class StockTransferController extends Controller
                 })
                 ->editColumn(
                     'final_total',
-                    function($row) {
-                        if (auth()->user()->can('view_purchase_price')) {
-                            return '<span class="display_currency" data-currency_symbol="true">' . $row->final_total . '</span>';
-                        } else {
-                            return '<span>-</span>';
-                        }
-                    }
+                    '<span class="display_currency" data-currency_symbol="true">{{$final_total}}</span>'
                 )
                 ->editColumn(
                     'shipping_charges',
@@ -162,7 +146,7 @@ class StockTransferController extends Controller
      */
     public function create()
     {
-        if (! auth()->user()->can('stock_transfer.create')) {
+        if (! auth()->user()->can('purchase.create')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -198,7 +182,7 @@ class StockTransferController extends Controller
      */
     public function store(Request $request)
     {
-        if (! auth()->user()->can('stock_transfer.create')) {
+        if (! auth()->user()->can('purchase.create')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -244,7 +228,6 @@ class StockTransferController extends Controller
                         'variation_id' => $product['variation_id'],
                         'quantity' => $this->productUtil->num_uf($product['quantity']),
                         'item_tax' => 0,
-                        'line_total_tax' => 0,
                         'tax_id' => null, ];
 
                     if (! empty($product['product_unit_id'])) {
@@ -384,7 +367,7 @@ class StockTransferController extends Controller
      */
     public function show($id)
     {
-        if (! auth()->user()->can('stock_transfer.view') && ! auth()->user()->can('stock_transfer.view_own')) {
+        if (! auth()->user()->can('purchase.view')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -447,7 +430,7 @@ class StockTransferController extends Controller
      */
     public function destroy($id)
     {
-        if (! auth()->user()->can('stock_transfer.delete')) {
+        if (! auth()->user()->can('purchase.delete')) {
             abort(403, 'Unauthorized action.');
         }
         try {
@@ -637,15 +620,7 @@ class StockTransferController extends Controller
 
         $products = [];
         foreach ($sell_transfer->sell_lines as $sell_line) {
-            $product = $this->productUtil->getDetailsFromVariation(
-                $sell_line->variation_id,
-                $business_id,
-                $sell_transfer->location_id,
-                true,
-                // Allow zero stock here so an existing transfer can still be edited/viewed
-                // even if the current location stock has since reached 0.
-                true
-            );
+            $product = $this->productUtil->getDetailsFromVariation($sell_line->variation_id, $business_id, $sell_transfer->location_id, false);
             $product->formatted_qty_available = $this->productUtil->num_f($product->qty_available);
             $product->sub_unit_id = $sell_line->sub_unit_id;
             $product->quantity_ordered = $sell_line->quantity;
@@ -732,7 +707,6 @@ class StockTransferController extends Controller
                         'variation_id' => $product['variation_id'],
                         'quantity' => $this->productUtil->num_uf($product['quantity']),
                         'item_tax' => 0,
-                        'line_total_tax' => 0,
                         'tax_id' => null, ];
 
                     if (! empty($product['product_unit_id'])) {
@@ -895,7 +869,7 @@ class StockTransferController extends Controller
      */
     public function updateStatus(Request $request, $id)
     {
-        if (! auth()->user()->can('stock_transfer.update')) {
+        if (! auth()->user()->can('purchase.update')) {
             abort(403, 'Unauthorized action.');
         }
 

@@ -44,7 +44,4 @@ return [
     'price' => 'Price',
     'activate' => 'Activate',
     'deactivate' => 'Deactivate',
-    'print_detailed' => 'Tipărește Detaliat',
-    'print_mini' => 'Tipărește Mini',
-    'opening' => 'Deschidere',
 ];

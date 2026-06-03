@@ -70,7 +70,7 @@
                             @else
                                 ''
                             @endif">
-                            <a href="#purchases_tab" data-toggle="tab" id="purchases-link" aria-expanded="true"><i class="fas fa-arrow-circle-down" aria-hidden="true"></i> @lang( 'purchase.purchases')</a>
+                            <a href="#purchases_tab" data-toggle="tab" aria-expanded="true"><i class="fas fa-arrow-circle-down" aria-hidden="true"></i> @lang( 'purchase.purchases')</a>
                         </li>
                         <li class="
                             @if(!empty($view_type) &&  $view_type == 'stock_report')
@@ -331,7 +331,6 @@ $(document).ready( function(){
     rp_log_table = $('#rp_log_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         aaSorting: [[0, 'desc']],
         ajax: '/sells?customer_id={{ $contact->id }}&rewards_only=true',
         columns: [
@@ -345,7 +344,6 @@ $(document).ready( function(){
     supplier_stock_report_table = $('#supplier_stock_report_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         'ajax': {
             url: "{{action([\App\Http\Controllers\ContactController::class, 'getSupplierStockReport'], [$contact->id])}}",
             data: function (d) {
@@ -517,7 +515,6 @@ function get_contact_ledger() {
                 searching: false,
                 ordering:false,
                 paging:false,
-                fixedHeader:false,
                 dom: 't'
             });
         },
@@ -586,10 +583,6 @@ $(document).on('click', '#print_ledger_pdf', function() {
         );
         $('#purchase_list_filter_date_range').on('cancel.daterangepicker', function(ev, picker) {
             $('#purchase_list_filter_date_range').val('');
-            purchase_table.ajax.reload();
-        });
-
-        $('#purchases-link').on('click', function(e) {
             purchase_table.ajax.reload();
         });
     });

@@ -820,15 +820,6 @@ class PurchaseOrderController extends Controller
                     )
                     ->first();
 
-
-        
-        foreach ($purchase->purchase_lines as $key => $value) {
-            if (! empty($value->sub_unit_id)) {
-                $formated_purchase_line = $this->productUtil->changePurchaseLineUnit($value, $business_id);
-                $purchase->purchase_lines[$key] = $formated_purchase_line;
-            }
-        }
-
         $location_details = BusinessLocation::find($purchase->location_id);
         $invoice_layout = $this->businessUtil->invoiceLayout($business_id, $location_details->invoice_layout_id);
 

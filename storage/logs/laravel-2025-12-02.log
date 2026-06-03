@@ -1,0 +1,2 @@
+[2025-12-02 11:51:18] live.EMERGENCY: File:/home/u258259601/domains/savoryside.mylablk.com/public_html/app/Http/Controllers/ImportProductsController.phpLine:608Message:Unit with name Kg not found in row no. 1. You can add unit from Products > Units  
+[2025-12-02 11:52:50] live.EMERGENCY: File:/home/u258259601/domains/savoryside.mylablk.com/public_html/app/Http/Controllers/ImportProductsController.phpLine:608Message:PURCHASE PRICE is required in row no. 88  

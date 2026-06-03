@@ -45,8 +45,7 @@ class StockAdjustmentController extends Controller
      */
     public function index()
     {
-
-        if (! auth()->user()->can('stock_adjustment.view') && ! auth()->user()->can('stock_adjustment.create') && ! auth()->user()->can('view_own_stock_adjustment')) {
+        if (! auth()->user()->can('purchase.view') && ! auth()->user()->can('purchase.create')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -92,14 +91,6 @@ class StockAdjustmentController extends Controller
                 $stock_adjustments->where('transactions.location_id', $location_id);
             }
 
-            if (! auth()->user()->can('stock_adjustment.view') && auth()->user()->can('view_own_stock_adjustment')) {
-                $stock_adjustments->where('transactions.created_by', request()->session()->get('user.id'));
-            }
-
-            if(! auth()->user()->can('stock_adjustment.delete')){
-                $hide = 'hide';
-            }
-
             return Datatables::of($stock_adjustments)
                 ->addColumn('action', '<button type="button" data-href="{{action([\App\Http\Controllers\StockAdjustmentController::class, \'show\'], [$id]) }}" class="tw-dw-btn tw-dw-btn-xs tw-dw-btn-outline  tw-dw-btn-primary btn-modal" data-container=".view_modal"><i class="fa fa-eye" aria-hidden="true"></i> @lang("messages.view")</button>
                  &nbsp;
@@ -108,23 +99,13 @@ class StockAdjustmentController extends Controller
                 ->editColumn(
                     'final_total',
                     function ($row) {
-                        if (auth()->user()->can('view_purchase_price')) {
-                            return $this->transactionUtil->num_f($row->final_total, true);                     
-                         } else {
-                            return '<span>-</span>';
-                        }
-                        
+                        return $this->transactionUtil->num_f($row->final_total, true);
                     }
                 )
-
                 ->editColumn(
                     'total_amount_recovered',
                     function ($row) {
-                        if (auth()->user()->can('view_purchase_price')) {
-                            return $this->transactionUtil->num_f($row->total_amount_recovered, true);                    
-                         } else {
-                            return '<span>-</span>';
-                        }
+                        return $this->transactionUtil->num_f($row->total_amount_recovered, true);
                     }
                 )
                 ->editColumn('transaction_date', '{{@format_datetime($transaction_date)}}')
@@ -149,7 +130,7 @@ class StockAdjustmentController extends Controller
      */
     public function create()
     {
-        if (! auth()->user()->can('stock_adjustment.create')) {
+        if (! auth()->user()->can('purchase.create')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -174,7 +155,7 @@ class StockAdjustmentController extends Controller
      */
     public function store(Request $request)
     {
-        if (! auth()->user()->can('stock_adjustment.create')) {
+        if (! auth()->user()->can('purchase.create')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -277,7 +258,7 @@ class StockAdjustmentController extends Controller
      */
     public function show($id)
     {
-        if (! auth()->user()->can('stock_adjustment.view')) {
+        if (! auth()->user()->can('purchase.view')) {
             abort(403, 'Unauthorized action.');
         }
         $business_id = request()->session()->get('user.business_id');
@@ -332,7 +313,7 @@ class StockAdjustmentController extends Controller
      */
     public function destroy($id)
     {
-        if (! auth()->user()->can('stock_adjustment.delete')) {
+        if (! auth()->user()->can('purchase.delete')) {
             abort(403, 'Unauthorized action.');
         }
         try {
@@ -433,7 +414,7 @@ class StockAdjustmentController extends Controller
      */
     public function removeExpiredStock($purchase_line_id)
     {
-        if (! auth()->user()->can('stock_adjustment.delete')) {
+        if (! auth()->user()->can('purchase.delete')) {
             abort(403, 'Unauthorized action.');
         }
 

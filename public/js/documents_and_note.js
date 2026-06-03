@@ -146,7 +146,6 @@ function initializeDocumentAndNoteDataTable() {
     documents_and_notes_data_table = $('#documents_and_notes_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         ajax:{
             url: '/note-documents',
             data: function(d) {

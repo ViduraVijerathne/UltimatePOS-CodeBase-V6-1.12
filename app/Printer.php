@@ -16,10 +16,10 @@ class Printer extends Model
     public static function capability_profiles()
     {
         $profiles = [
-            'default' => __('lang_v1.default'),
-            'simple' => __('lang_v1.simple'),
-            'SP2000' => __('lang_v1.star_branded'),
-            'TEP-200M' => __('lang_v1.espon_tep'),
+            'default' => 'Default',
+            'simple' => 'Simple',
+            'SP2000' => 'Star Branded',
+            'TEP-200M' => 'Espon Tep',
             'P822D' => 'P822D',
         ];
 
@@ -36,9 +36,9 @@ class Printer extends Model
     public static function connection_types()
     {
         $types = [
-            'network' => __('lang_v1.network'),
-            'windows' => __('lang_v1.windows'),
-            'linux' => __('lang_v1.linux'),
+            'network' => 'Network',
+            'windows' => 'Windows',
+            'linux' => 'Linux',
         ];
 
         return $types;

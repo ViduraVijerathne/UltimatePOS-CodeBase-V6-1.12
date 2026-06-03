@@ -51,7 +51,7 @@
                     </div>
                   </div>
 
-                <h4> License Details <small class="text-danger">Make sure to provide correct information from Envato/codecanyon</small></h4>
+            <?php /* <h4> License Details <small class="text-danger">Make sure to provide correct information from Envato/codecanyon</small></h4>
                 <hr/>
 
                 <div class="col-md-4">
@@ -82,7 +82,7 @@
                       </div>
                     </div>
                   @endif
-                  
+                */ ?>  
                   <div class="clearfix"></div>
                   
                   <h4> Database Details <small>Make sure to provide correct information</small></h4>

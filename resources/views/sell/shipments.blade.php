@@ -154,7 +154,6 @@ $(document).ready( function(){
     sell_table = $('#sell_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
         aaSorting: [[1, 'desc']],
         scrollY:        "75vh",
         scrollX:        true,

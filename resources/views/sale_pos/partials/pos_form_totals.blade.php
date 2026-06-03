@@ -10,8 +10,8 @@
 				</td>
 			</tr>
 			<tr>
-				
-					<td @if(!Gate::check('disable_discount') || auth()->user()->can('superadmin') || auth()->user()->can('admin')) class="" @else class="hide" @endif>
+				@if(!Gate::check('disable_discount') || auth()->user()->can('superadmin') || auth()->user()->can('admin'))
+					<td>
 						<b class="tw-text-base md:tw-text-lg tw-font-bold">
 							@if($is_discount_enabled)
 								@lang('sale.discount')
@@ -39,7 +39,7 @@
 								</span>
 						</b> 
 					</td>
-				
+				@endif
 				<td class="@if($pos_settings['disable_order_tax'] != 0) hide @endif">
 					<span class="tw-text-base md:tw-text-lg tw-font-semibold">
 						<b class="tw-text-base md:tw-text-lg tw-font-bold">@lang('sale.order_tax')(+): @show_tooltip(__('tooltip.sale_tax'))</b>
@@ -83,7 +83,8 @@
 				</td>
 				@if(in_array('types_of_service', $enabled_modules))
 					<td class="col-sm-3 col-xs-6 d-inline-table">
-						<b class="tw-text-base md:tw-text-lg tw-font-bold">@lang('lang_v1.packing_charge')(+):</b>
+						<b class="tw-text-base md:tw-text-lg tw-font-bold">Packing Charge (+):</b>
+							<!--<b class="tw-text-base md:tw-text-lg tw-font-bold">@lang('lang_v1.packing_charge')(+):</b>-->
 						<i class="fas fa-edit cursor-pointer service_modal_btn"></i> 
 						<span  class="tw-text-base md:tw-text-lg tw-font-semibold" id="packing_charge_text">
 							0

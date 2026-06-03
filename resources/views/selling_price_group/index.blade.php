@@ -77,7 +77,6 @@
             var selling_price_group_table = $('#selling_price_group_table').DataTable({
                 processing: true,
                 serverSide: true,
-                fixedHeader:false,
                 ajax: '/selling-price-group',
                 columnDefs: [{
                     "targets": 2,

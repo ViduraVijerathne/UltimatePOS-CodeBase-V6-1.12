@@ -93,6 +93,21 @@
 					{{$receipt_details->invoice_date}}
 				</p>
 			</div>
+
+			@if(!empty($receipt_details->types_of_service))
+				<div class="textbox-info">
+					<p class="f-left"><strong>{!! $receipt_details->types_of_service_label !!}</strong></p>
+					<p class="f-right">{{$receipt_details->types_of_service}}</p>
+				</div>
+				@if(!empty($receipt_details->types_of_service_custom_fields))
+					@foreach($receipt_details->types_of_service_custom_fields as $key => $value)
+						<div class="textbox-info">
+							<p class="f-left"><strong>{{$key}}</strong></p>
+							<p class="f-right">{{$value}}</p>
+						</div>
+					@endforeach
+				@endif
+			@endif
 			
 			@if(!empty($receipt_details->due_date_label))
 				<div class="textbox-info">
@@ -632,16 +647,6 @@
 					</div>
 				@endif
 
-				@if(!empty($receipt_details->total_previous_due))
-					<div class="flex-box">
-						<p class="width-50 text-left">
-							{!! $receipt_details->total_previous_due_label !!}
-						</p>
-						<p class="width-50 text-right">
-							{{$receipt_details->total_previous_due}}
-						</p>
-					</div>
-				@endif
 				@if(!empty($receipt_details->all_due))
 					<div class="flex-box">
 						<p class="width-50 text-left">
@@ -687,11 +692,11 @@
 				<img class="center-block mt-5" src="data:image/png;base64,{{DNS2D::getBarcodePNG($receipt_details->qr_code_text, 'QRCODE')}}">
 			@endif
 
-			@if(!empty($receipt_details->footer_text))
-				<p class="centered">
-					{!! $receipt_details->footer_text !!}
-				</p>
-			@endif
+		@if(!empty($receipt_details->footer_text))
+			<p class="centered">
+				{!! $receipt_details->footer_text !!}
+			</p>
+		@endif
         </div>
         <!-- <button id="btnPrint" class="hidden-print">Print</button>
         <script src="script.js"></script> -->

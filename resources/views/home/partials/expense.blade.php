@@ -17,7 +17,7 @@
     'svg_text' => 'tw-bg-red-100',
 ])
     <p class="tw-text-sm tw-font-medium tw-text-gray-500 tw-truncate tw-whitespace-nowrap">
-        {{ $dashboard_detail->heading }}
+        {{ $expense_heading }}
     </p>
     @if (isset($dashboard_detail))
         <script>
@@ -31,6 +31,10 @@
             class="total_expense_{{ $dashboard_detail->index }} tw-mt-0.5 tw-text-gray-900 tw-text-xl tw-truncate tw-font-semibold tw-tracking-tight tw-font-mono">
 
         </p>
-        <small>{{ $date_range }}</small>
+    @else
+        <p
+            class="total_expense tw-mt-0.5 tw-text-gray-900 tw-text-xl tw-truncate tw-font-semibold tw-tracking-tight tw-font-mono">
+
+        </p>
     @endif
 @endcomponent

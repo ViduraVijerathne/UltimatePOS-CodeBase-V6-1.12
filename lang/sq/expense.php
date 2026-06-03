@@ -22,6 +22,4 @@
      'expense_update_success' => 'Shpenzimet u përditësuan me sukses',
      'expense_delete_success' => 'Shpenzimet fshihen me sukses',
      'expense_for' => 'Shpenzime për',
-     'expense_for_help' => 'Zgjidhni përdoruesin (email/username) për të cilin lidhet shpenzimi (Opsionale)',
-    'import_expense' => 'Importo shpenzimin',
  ];

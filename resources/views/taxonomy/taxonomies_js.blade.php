@@ -22,14 +22,13 @@
                 category_table = $('#category_table').DataTable({
                     processing: true,
                     serverSide: true,
-                    fixedHeader:false,
                     ajax: '/taxonomies?type=' + category_type,
                     columns: [
-                        { data: 'name', name: 'name', orderable: false, searchable: true },
+                        { data: 'name', name: 'name' },
                         @if($cat_code_enabled)
-                            { data: 'short_code', name: 'short_code', orderable: false, searchable: true },
+                            { data: 'short_code', name: 'short_code' },
                         @endif
-                        { data: 'description', name: 'description', orderable: false, searchable: true },
+                        { data: 'description', name: 'description' },
                         { data: 'action', name: 'action', orderable: false, searchable: false},
                     ],
                 });

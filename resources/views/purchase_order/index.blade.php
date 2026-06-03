@@ -117,7 +117,6 @@
                 scrollY: "75vh",
                 scrollX: true,
                 scrollCollapse: true,
-                fixedHeader:false,
                 ajax: {
                     url: '{{ action([\App\Http\Controllers\PurchaseOrderController::class, 'index']) }}',
                     data: function(d) {

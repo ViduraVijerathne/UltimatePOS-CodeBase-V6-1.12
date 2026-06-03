@@ -145,8 +145,7 @@
             isRTL: isRTL
         });
         // side bar toggle  
-        $(".drop_down").click(function(event) {
-            event.preventDefault();
+        $(".drop_down").click(function() {
             var $chiled = $(this).next(".chiled");
             var svgElement = $(this).find(".svg");
             $(".chiled").not($chiled).slideUp();
@@ -190,31 +189,13 @@
             }
         });
 
-        $(document).on('click', function (e) {
-            $('[data-toggle="popover"]').popover();
-
-            $(document).on('click', function (e) {
-                $('[data-toggle="popover"]').each(function () {
-                    // Check if the clicked element is the popover button or inside the popover
-                    if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
-                        $(this).popover('hide');
-                    }
-                });
-            });
-            
-        });
-
         $('.side-bar-collapse').click(function() {
             $('.side-bar').toggle('slow');
         });
 
         $('.dt-buttons.btn-group').find('a.btn').removeClass('btn-default');
         $('.dt-buttons.btn-group').find('a.btn').removeClass('btn');
-        
-        // $('.date_range').on('show.daterangepicker', function (ev, picker) {
-        //     $(picker.container).insertAfter($(this));
-        // });
-   
+
     });
 </script>
 
