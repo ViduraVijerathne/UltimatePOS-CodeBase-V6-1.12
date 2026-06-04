@@ -88,6 +88,13 @@ class TenantInvoiceApiUtil
         $timeout = (int) config('tenant_invoice_api.timeout', 15);
 
         if (empty($url) || empty($apiKey)) {
+            Log::channel('tenant_invoice_api')->error('tenant_invoice_api.config_error', [
+                'time' => now()->toIso8601String(),
+                'error' => 'Tenant invoice API is not configured (TENANT_INVOICE_API_BASE_URL / TENANT_INVOICE_API_KEY).',
+                'url_configured' => !empty($url),
+                'key_configured' => !empty($apiKey),
+            ]);
+
             return [
                 'ok' => false,
                 'http_status' => null,
