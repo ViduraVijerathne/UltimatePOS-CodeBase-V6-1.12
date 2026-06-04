@@ -86,6 +86,10 @@ class SellController extends Controller
         $is_tables_enabled = $this->transactionUtil->isModuleEnabled('tables');
         $is_service_staff_enabled = $this->transactionUtil->isModuleEnabled('service_staff');
         $is_types_service_enabled = $this->moduleUtil->isModuleEnabled('types_of_service');
+        $types_of_service = [];
+        if ($is_types_service_enabled) {
+            $types_of_service = TypesOfService::forDropdown($business_id);
+        }
 
         if (request()->ajax()) {
             $payment_types = $this->transactionUtil->payment_types(null, true, $business_id);
@@ -192,9 +196,16 @@ class SellController extends Controller
                 $customer_id = request()->customer_id;
                 $sells->where('contacts.id', $customer_id);
             }
-            if (! empty(request()->start_date) && ! empty(request()->end_date)) {
-                $start = request()->start_date;
-                $end = request()->end_date;
+            $start_date = request()->input('start_date');
+            $end_date = request()->input('end_date');
+            if (empty($start_date) && empty($end_date)) {
+                $start_date = request()->input('from_date');
+                $end_date = request()->input('to_date');
+            }
+
+            if (! empty($start_date) && ! empty($end_date)) {
+                $start = $start_date;
+                $end = $end_date;
                 $sells->whereDate('transactions.transaction_date', '>=', $start)
                             ->whereDate('transactions.transaction_date', '<=', $end);
             }
@@ -268,6 +279,10 @@ class SellController extends Controller
                 $sells->where('transactions.res_waiter_id', request()->input('service_staffs'));
             }
 
+            if (! empty(request()->input('types_of_service_id'))) {
+                $sells->where('transactions.types_of_service_id', request()->input('types_of_service_id'));
+            }
+
             $only_pending_shipments = request()->only_pending_shipments == 'true' ? true : false;
             if ($only_pending_shipments) {
                 $sells->where('transactions.shipping_status', '!=', 'delivered')
@@ -295,6 +310,20 @@ class SellController extends Controller
             }
 
             $sells->groupBy('transactions.id');
+
+            if (! empty(request()->input('summary_only'))) {
+                $summary_rows = (clone $sells)->get();
+
+                return response()->json([
+                    'sales_count' => $summary_rows->count(),
+                    'total_sales' => $summary_rows->sum('final_total'),
+                    'total_paid' => $summary_rows->sum('total_paid'),
+                    'total_remaining' => $summary_rows->sum(function ($row) {
+                        return $row->final_total - $row->total_paid;
+                    }),
+                    'total_items' => $summary_rows->sum('total_items'),
+                ]);
+            }
 
             if (! empty(request()->suspended)) {
                 $transaction_sub_type = request()->get('transaction_sub_type');
@@ -623,7 +652,7 @@ class SellController extends Controller
 
 
         return view('sell.index')
-        ->with(compact('business_locations', 'customers', 'is_woocommerce', 'sales_representative', 'is_cmsn_agent_enabled', 'commission_agents', 'service_staffs', 'is_tables_enabled', 'is_service_staff_enabled', 'is_types_service_enabled', 'shipping_statuses', 'sources', 'payment_types'));
+        ->with(compact('business_locations', 'customers', 'is_woocommerce', 'sales_representative', 'is_cmsn_agent_enabled', 'commission_agents', 'service_staffs', 'is_tables_enabled', 'is_service_staff_enabled', 'is_types_service_enabled', 'types_of_service', 'shipping_statuses', 'sources', 'payment_types'));
     }
 
     /**

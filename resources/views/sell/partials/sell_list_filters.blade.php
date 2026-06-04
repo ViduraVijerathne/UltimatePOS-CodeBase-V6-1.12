@@ -26,8 +26,29 @@
 @if(empty($only) || in_array('sell_list_filter_date_range', $only))
 <div class="col-md-3">
     <div class="form-group">
-        {!! Form::label('sell_list_filter_date_range', __('report.date_range') . ':') !!}
-        {!! Form::text('sell_list_filter_date_range', null, ['placeholder' => __('lang_v1.select_a_date_range'), 'class' => 'form-control', 'readonly']); !!}
+        @if(!empty($use_from_to_dates))
+            {!! Form::label('from_date', __('lang_v1.from_date') . ':') !!}
+            {!! Form::text('from_date', null, ['placeholder' => __('lang_v1.from_date'), 'class' => 'form-control start-date-picker', 'readonly', 'id' => 'from_date']); !!}
+        @else
+            {!! Form::label('sell_list_filter_date_range', __('report.date_range') . ':') !!}
+            {!! Form::text('sell_list_filter_date_range', null, ['placeholder' => __('lang_v1.select_a_date_range'), 'class' => 'form-control', 'readonly']); !!}
+        @endif
+    </div>
+</div>
+@endif
+@if(!empty($use_from_to_dates))
+<div class="col-md-3">
+    <div class="form-group">
+        {!! Form::label('to_date', __('lang_v1.to_date') . ':') !!}
+        {!! Form::text('to_date', null, ['placeholder' => __('lang_v1.to_date'), 'class' => 'form-control start-date-picker', 'readonly', 'id' => 'to_date']); !!}
+    </div>
+</div>
+@endif
+@if(!empty($types_of_service) && (empty($only) || in_array('types_of_service_id', $only)))
+<div class="col-md-3">
+    <div class="form-group">
+        {!! Form::label('types_of_service_id', __('lang_v1.types_of_service') . ':') !!}
+        {!! Form::select('types_of_service_id', $types_of_service, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'placeholder' => __('lang_v1.all')]); !!}
     </div>
 </div>
 @endif
