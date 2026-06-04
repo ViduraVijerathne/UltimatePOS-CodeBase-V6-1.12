@@ -784,7 +784,10 @@ function increment_existing_purchase_entry_row(variation_id) {
     var quantity_input = existing_row.find('input.purchase_quantity');
     var quantity = __read_number(quantity_input, true);
     __write_number(quantity_input, quantity + 1, true);
-    quantity_input.trigger('change').focus();
+    quantity_input.trigger('change');
+    setTimeout(function() {
+        $('input#search_product').focus().select();
+    }, 100);
 
     return true;
 }
@@ -823,7 +826,10 @@ function merge_purchase_entry_row(row) {
     var added_quantity = __read_number(row.find('input.purchase_quantity'), true);
 
     __write_number(quantity_input, existing_quantity + added_quantity, true);
-    quantity_input.trigger('change').focus();
+    quantity_input.trigger('change');
+    setTimeout(function() {
+        $('input#search_product').focus().select();
+    }, 100);
 
     return true;
 }
