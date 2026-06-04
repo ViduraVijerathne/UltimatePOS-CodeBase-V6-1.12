@@ -88,9 +88,9 @@
                             <th>{{ $custom_labels['sell']['custom_field_3'] ?? '' }}</th>
                             <th>{{ $custom_labels['sell']['custom_field_4'] ?? '' }}</th>
                             <th>@lang('lang_v1.added_by')</th>
-                            <th>@lang('sale.sell_note')</th>
-                            <th>@lang('sale.staff_note')</th>
-                            <th>@lang('sale.shipping_details')</th>
+                            <th style="display: none;">@lang('sale.sell_note')</th>
+                            <th style="display: none;">@lang('sale.staff_note')</th>
+                            <th style="display: none;">@lang('sale.shipping_details')</th>
                             <th>@lang('restaurant.table')</th>
                             <th>@lang('restaurant.service_staff')</th>
                         </tr>
@@ -304,15 +304,27 @@
                     },
                     {
                         data: 'additional_notes',
-                        name: 'additional_notes'
+                        name: 'additional_notes',
+                        visible: false,
+                        createdCell: function(td) {
+                            $(td).css('display', 'none');
+                        }
                     },
                     {
                         data: 'staff_note',
-                        name: 'staff_note'
+                        name: 'staff_note',
+                        visible: false,
+                        createdCell: function(td) {
+                            $(td).css('display', 'none');
+                        }
                     },
                     {
                         data: 'shipping_details',
-                        name: 'shipping_details'
+                        name: 'shipping_details',
+                        visible: false,
+                        createdCell: function(td) {
+                            $(td).css('display', 'none');
+                        }
                     },
                     {
                         data: 'table_name',
