@@ -12,7 +12,7 @@
     <!-- Main content -->
     <section class="content no-print">
         @component('components.filters', ['title' => __('report.filters')])
-            @include('sell.partials.sell_list_filters', ['use_from_to_dates' => true, 'types_of_service' => $types_of_service])
+            @include('sell.partials.sell_list_filters', ['types_of_service' => $types_of_service])
             @if ($payment_types)
                 <div class="col-md-3">
                     <div class="form-group">
@@ -182,12 +182,12 @@
                     payment_method: $('#payment_method').val(),
                 };
 
-                if ($('#from_date').length && $('#from_date').val()) {
-                    filters.from_date = $('#from_date').val();
-                }
-
-                if ($('#to_date').length && $('#to_date').val()) {
-                    filters.to_date = $('#to_date').val();
+                if ($('#sell_list_filter_date_range').val()) {
+                    var date_range = $('#sell_list_filter_date_range').data('daterangepicker');
+                    if (date_range) {
+                        filters.start_date = date_range.startDate.format('YYYY-MM-DD');
+                        filters.end_date = date_range.endDate.format('YYYY-MM-DD');
+                    }
                 }
 
                 if ($('#shipping_status').length) {
@@ -219,6 +219,18 @@
                 sell_table.ajax.reload();
                 loadAllSalesSummary();
             }
+
+            $('#sell_list_filter_date_range').daterangepicker(dateRangeSettings, function(start, end) {
+                $('#sell_list_filter_date_range').val(
+                    start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format)
+                );
+                reloadAllSales();
+            });
+
+            $('#sell_list_filter_date_range').on('cancel.daterangepicker', function() {
+                $('#sell_list_filter_date_range').val('');
+                reloadAllSales();
+            });
 
             sell_table = $('#sell_table').DataTable({
                 processing: true,
@@ -294,7 +306,7 @@
 
             loadAllSalesSummary();
 
-            $(document).on('change', '#sell_list_filter_location_id, #sell_list_filter_customer_id, #sell_list_filter_payment_status, #created_by, #sales_cmsn_agnt, #service_staffs, #shipping_status, #sell_list_filter_source, #payment_method, #types_of_service_id, #from_date, #to_date', function() {
+            $(document).on('change', '#sell_list_filter_location_id, #sell_list_filter_customer_id, #sell_list_filter_payment_status, #created_by, #sales_cmsn_agnt, #service_staffs, #shipping_status, #sell_list_filter_source, #payment_method, #types_of_service_id', function() {
                 reloadAllSales();
             });
 
