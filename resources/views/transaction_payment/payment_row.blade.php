@@ -42,7 +42,7 @@
         </div>
         <div class="col-md-4">
           <div class="well">
-            <strong>@lang('sale.total_amount'): </strong><span class="display_currency" data-currency_symbol="true">{{ $transaction->final_total }}</span><br>
+            <strong>@lang('sale.total_amount'): </strong><span class="display_currency" data-currency_symbol="true">{{ in_array($transaction->type, ['sell', 'sell_return']) ? app(\App\Utils\Util::class)->adjustSaleDisplayAmount($transaction->final_total) : $transaction->final_total }}</span><br>
             <strong>@lang('purchase.payment_note'): </strong>
             @if(!empty($transaction->additional_notes))
             {{ $transaction->additional_notes }}

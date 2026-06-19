@@ -60,14 +60,14 @@
                     - {{ $sell_line->variations->name}}
                   @endif
                 </td>
-                <td><span class="display_currency" data-currency_symbol="true">{{ $sell_line->unit_price_inc_tax }}</span></td>
+                <td><span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell_line->unit_price_inc_tax) }}</span></td>
                 <td>{{@format_quantity($sell_line->quantity_returned)}} {{$unit_name}}</td>
                 <td>
                   @php
                     $line_total = $sell_line->unit_price_inc_tax * $sell_line->quantity_returned;
                     $total_before_tax += $line_total ;
                   @endphp
-                  <span class="display_currency" data-currency_symbol="true">{{$line_total}}</span>
+                  <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($line_total) }}</span>
                 </td>
             </tr>
             @endforeach
@@ -81,7 +81,7 @@
         <tr>
           <th>@lang('purchase.net_total_amount'): </th>
           <td></td>
-          <td><span class="display_currency pull-right" data-currency_symbol="true">{{ $total_before_tax }}</span></td>
+          <td><span class="display_currency pull-right" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($total_before_tax) }}</span></td>
         </tr>
 
         <tr>
@@ -90,7 +90,7 @@
           <td class="text-right">@if($sell->return_parent->discount_type == 'percentage')
               @<strong><small>{{$sell->return_parent->discount_amount}}%</small></strong> -
               @endif
-          <span class="display_currency pull-right" data-currency_symbol="true">{{ $total_discount }}</span></td>
+          <span class="display_currency pull-right" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($total_discount) }}</span></td>
         </tr>
         
         <tr>
@@ -99,7 +99,7 @@
           <td class="text-right">
               @if(!empty($sell_taxes))
                 @foreach($sell_taxes as $k => $v)
-                  <strong><small>{{$k}}</small></strong> - <span class="display_currency pull-right" data-currency_symbol="true">{{ $v }}</span><br>
+                  <strong><small>{{$k}}</small></strong> - <span class="display_currency pull-right" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($v) }}</span><br>
                 @endforeach
               @else
               0.00
@@ -109,7 +109,7 @@
         <tr>
           <th>@lang('lang_v1.return_total'):</th>
           <td></td>
-          <td><span class="display_currency pull-right" data-currency_symbol="true" >{{ $sell->return_parent->final_total }}</span></td>
+          <td><span class="display_currency pull-right" data-currency_symbol="true" >{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell->return_parent->final_total) }}</span></td>
         </tr>
       </table>
     </div>

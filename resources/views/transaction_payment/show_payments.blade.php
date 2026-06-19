@@ -193,7 +193,7 @@
                             <tr>
                               <td>{{ @format_datetime($payment->paid_on) }}</td>
                               <td>{{ $payment->payment_ref_no }}</td>
-                              <td><span class="display_currency" data-currency_symbol="true">{{ $payment->amount }}</span></td>
+                              <td><span class="display_currency" data-currency_symbol="true">{{ in_array($transaction->type, ['sell', 'sell_return']) ? app(\App\Utils\Util::class)->adjustSaleDisplayAmount($payment->amount) : $payment->amount }}</span></td>
                               <td>{{ $payment_types[$payment->method] ?? '' }}</td>
                               <td>@if(!empty($payment->gateway)){{$payment->gateway}} - @endif {{ $payment->note }}</td>
                               @if($accounts_enabled)

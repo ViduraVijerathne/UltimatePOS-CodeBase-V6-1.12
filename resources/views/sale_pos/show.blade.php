@@ -239,7 +239,7 @@
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ @format_date($payment_line->paid_on) }}</td>
                 <td>{{ $payment_line->payment_ref_no }}</td>
-                <td><span class="display_currency" data-currency_symbol="true">{{ $payment_line->amount }}</span></td>
+                <td><span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($payment_line->amount) }}</span></td>
                 <td>
                   {{ $payment_types[$payment_line->method] ?? $payment_line->method }}
                   @if($payment_line->is_return == 1)
@@ -276,14 +276,14 @@
               <tr>
                 <th>{{ __('lang_v1.packing_charge') }}:</th>
                 <td><b>(+)</b></td>
-                <td><div class="pull-right"><span class="display_currency" @if( $sell->packing_charge_type == 'fixed') data-currency_symbol="true" @endif>{{ $sell->packing_charge }}</span> @if( $sell->packing_charge_type == 'percent') {{ '%'}} @endif </div></td>
+                <td><div class="pull-right"><span class="display_currency" @if( $sell->packing_charge_type == 'fixed') data-currency_symbol="true" @endif>{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell->packing_charge) }}</span> @if( $sell->packing_charge_type == 'percent') {{ '%'}} @endif </div></td>
               </tr>
             @endif
             @if(session('business.enable_rp') == 1 && !empty($sell->rp_redeemed) )
               <tr>
                 <th>{{session('business.rp_name')}}:</th>
                 <td><b>(-)</b></td>
-                <td> <span class="display_currency pull-right" data-currency_symbol="true">{{ $sell->rp_redeemed_amount }}</span></td>
+                <td> <span class="display_currency pull-right" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell->rp_redeemed_amount) }}</span></td>
               </tr>
             @endif
             <tr>

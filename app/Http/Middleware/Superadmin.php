@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Utils\Util;
 use Closure;
 
 class Superadmin
@@ -15,9 +16,7 @@ class Superadmin
      */
     public function handle($request, Closure $next)
     {
-        $administrator_list = config('constants.administrator_usernames');
-
-        if (! empty($request->user()) && in_array(strtolower($request->user()->username), explode(',', strtolower($administrator_list)))) {
+        if (! empty($request->user()) && app(Util::class)->usernameInCsvList($request->user()->username, config('constants.administrator_usernames'))) {
             return $next($request);
         } else {
             abort(403, 'Unauthorized action.');

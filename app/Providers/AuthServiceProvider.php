@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Utils\Util;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -28,9 +29,7 @@ class AuthServiceProvider extends ServiceProvider
         Gate::before(function ($user, $ability) {
             if (in_array($ability, ['backup', 'superadmin',
                 'manage_modules', ])) {
-                $administrator_list = config('constants.administrator_usernames');
-
-                if (in_array(strtolower($user->username), explode(',', strtolower($administrator_list)))) {
+                if (app(Util::class)->usernameInCsvList($user->username, config('constants.administrator_usernames'))) {
                     return true;
                 }
             } else {

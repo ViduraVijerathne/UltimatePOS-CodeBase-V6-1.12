@@ -191,28 +191,28 @@
           <b><span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($register_details->total_refund) }}</span></b><br>
           <small>
           @if($register_details->total_cash_refund != 0)
-            Cash: <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_cash_refund }}</span><br>
+            Cash: <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($register_details->total_cash_refund) }}</span><br>
           @endif
           @if($register_details->total_cheque_refund != 0) 
-            Cheque: <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_cheque_refund }}</span><br>
+            Cheque: <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($register_details->total_cheque_refund) }}</span><br>
           @endif
           @if($register_details->total_card_refund != 0) 
-            Card: <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_card_refund }}</span><br> 
+            Card: <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($register_details->total_card_refund) }}</span><br>
           @endif
           @if($register_details->total_bank_transfer_refund != 0)
-            Bank Transfer: <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_bank_transfer_refund }}</span><br>
+            Bank Transfer: <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($register_details->total_bank_transfer_refund) }}</span><br>
           @endif
           @if(array_key_exists('custom_pay_1', $payment_types) && $register_details->total_custom_pay_1_refund != 0)
-              {{$payment_types['custom_pay_1']}}: <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_custom_pay_1_refund }}</span>
+              {{$payment_types['custom_pay_1']}}: <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($register_details->total_custom_pay_1_refund) }}</span>
           @endif
           @if(array_key_exists('custom_pay_2', $payment_types) && $register_details->total_custom_pay_2_refund != 0)
-              {{$payment_types['custom_pay_2']}}: <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_custom_pay_2_refund }}</span>
+              {{$payment_types['custom_pay_2']}}: <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($register_details->total_custom_pay_2_refund) }}</span>
           @endif
           @if(array_key_exists('custom_pay_3', $payment_types) && $register_details->total_custom_pay_3_refund != 0)
-              {{$payment_types['custom_pay_3']}}: <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_custom_pay_3_refund }}</span>
+              {{$payment_types['custom_pay_3']}}: <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($register_details->total_custom_pay_3_refund) }}</span>
           @endif
           @if($register_details->total_other_refund != 0)
-            Other: <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_other_refund }}</span>
+            Other: <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($register_details->total_other_refund) }}</span>
           @endif
           </small>
         </td>
@@ -222,7 +222,7 @@
           @lang('lang_v1.total_payment')
         </th>
         <td>
-          <b><span class="display_currency" data-currency_symbol="true">{{ $register_details->cash_in_hand + $register_details->total_cash - $register_details->total_cash_refund }}</span></b>
+          <b><span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($register_details->cash_in_hand + $register_details->total_cash - $register_details->total_cash_refund) }}</span></b>
         </td>
       </tr>
       <tr class="success">
@@ -230,7 +230,7 @@
           @lang('lang_v1.credit_sales'):
         </th>
         <td>
-          <b><span class="display_currency" data-currency_symbol="true">{{ $details['transaction_details']->total_sales - $register_details->total_sale }}</span></b>
+          <b><span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($details['transaction_details']->total_sales - $register_details->total_sale) }}</span></b>
         </td>
       </tr>
       <tr class="success">
@@ -238,7 +238,7 @@
           @lang('cash_register.total_sales'):
         </th>
         <td>
-          <b><span class="display_currency" data-currency_symbol="true">{{ $details['transaction_details']->total_sales }}</span></b>
+          <b><span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($details['transaction_details']->total_sales) }}</span></b>
         </td>
       </tr>
       <tr class="danger">
@@ -253,11 +253,11 @@
     <hr>
     <span>
         @lang('sale.total') = 
-        @format_currency($register_details->cash_in_hand) (@lang('messages.opening')) + 
-        @format_currency($register_details->total_sale + $register_details->total_refund) (@lang('business.sale')) - 
-        @format_currency($register_details->total_refund) (@lang('lang_v1.refund')) - 
+        @format_sale_currency($register_details->cash_in_hand) (@lang('messages.opening')) +
+        @format_sale_currency($register_details->total_sale + $register_details->total_refund) (@lang('business.sale')) -
+        @format_sale_currency($register_details->total_refund) (@lang('lang_v1.refund')) -
         @format_currency($register_details->total_expense) (@lang('lang_v1.expense')) 
-        = @format_currency($register_details->cash_in_hand + $register_details->total_sale - $register_details->total_expense)
+        = @format_currency(app(\App\Utils\Util::class)->adjustSaleDisplayAmount($register_details->cash_in_hand + $register_details->total_sale) - $register_details->total_expense)
     </span>
   </div>
 </div>

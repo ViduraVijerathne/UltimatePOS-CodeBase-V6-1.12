@@ -1,5 +1,42 @@
 <?php
 
+$env_bool = function ($key, $default = false) {
+    $value = env($key, $default);
+
+    if (is_bool($value)) {
+        return $value;
+    }
+
+    if ($value === null || $value === '') {
+        return (bool) $default;
+    }
+
+    $filtered = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+    return $filtered === null ? (bool) $default : $filtered;
+};
+
+$env_number = function ($key, $default = 0, $fallback_key = null) {
+    $value = env($key);
+    if (($value === null || $value === '') && $fallback_key) {
+        $value = env($fallback_key);
+    }
+    if ($value === null || $value === '') {
+        $value = $default;
+    }
+
+    return is_numeric($value) ? $value : $default;
+};
+
+$env_string = function ($key, $default = '', $fallback_key = null) {
+    $value = env($key);
+    if (($value === null || $value === '') && $fallback_key) {
+        $value = env($fallback_key);
+    }
+
+    return $value === null ? $default : $value;
+};
+
 return [
 
     /*
@@ -55,17 +92,17 @@ return [
     'new_notification_count_interval' => 60, //Interval to check for new notifications in seconds;Default is 60sec
 
     'administrator_usernames' => env('ADMINISTRATOR_USERNAMES'),
-    'special_sale_view_user' => env('special_sale_view_user', ''),
-    'sale_decrease_percentage' => env('sale_decrease_percentage', 0),
-    'SHOW_REPAIR_STATUS_LOGIN_SCREEN' => env('SHOW_REPAIR_STATUS_LOGIN_SCREEN', true),
-    'allow_registration' => env('ALLOW_REGISTRATION', true),
+    'special_sale_view_user' => $env_string('special_sale_view_user', '', 'SPECIAL_SALE_VIEW_USER'),
+    'sale_decrease_percentage' => $env_number('sale_decrease_percentage', 0, 'SALE_DECREASE_PERCENTAGE'),
+    'SHOW_REPAIR_STATUS_LOGIN_SCREEN' => $env_bool('SHOW_REPAIR_STATUS_LOGIN_SCREEN', true),
+    'allow_registration' => $env_bool('ALLOW_REGISTRATION', true),
     'app_title' => env('APP_TITLE'),
 
     'google_recaptcha_key' => env('GOOGLE_RECAPTCHA_KEY'),
     'google_recaptcha_secret' => env('GOOGLE_RECAPTCHA_SECRET'),
-    'enable_recaptcha' => env('ENABLE_RECAPTCHA', false),
+    'enable_recaptcha' => $env_bool('ENABLE_RECAPTCHA', false),
     // Enable disposable email validation (public registration)
-    'do_not_allow_disposable_email' => env('DO_NOT_ALLOW_DISPOSABLE_EMAIL', false),
+    'do_not_allow_disposable_email' => $env_bool('DO_NOT_ALLOW_DISPOSABLE_EMAIL', false),
     
     'mpdf_temp_path' => storage_path('app/pdf'), //Temporary path used by mpdf
 
@@ -91,6 +128,6 @@ return [
     'enable_b2b_marketplace' => false,
     'enable_contact_assign' => true, //Used in add/edit contacts screen
     'show_payment_type_on_contact_pay' => false,
-    'enable_gst_report_india' => env('ENABLE_GST_REPORT_INDIA', false),
+    'enable_gst_report_india' => $env_bool('ENABLE_GST_REPORT_INDIA', false),
     'enable_secondary_unit' => false, //Experimental feature, may depreciate
 ];

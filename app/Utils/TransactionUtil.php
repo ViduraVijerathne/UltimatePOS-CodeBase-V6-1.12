@@ -1953,7 +1953,213 @@ class TransactionUtil extends Util
         $output['design'] = $il->design;
         $output['table_tax_headings'] = ! empty($il->table_tax_headings) ? array_filter(json_decode($il->table_tax_headings), 'strlen') : null;
 
+        if (in_array($transaction_type, ['sell', 'sales_order', 'sell_return']) && $this->isSpecialSaleViewUser()) {
+            $output = $this->adjustReceiptSaleDisplayData($output, $transaction, $business_details, $show_currency, $il);
+        }
+
         return (object) $output;
+    }
+
+    protected function adjustReceiptSaleDisplayData(array $output, Transaction $transaction, $business_details, $show_currency, $il)
+    {
+        $format = function ($amount) use ($business_details, $show_currency) {
+            return $this->num_f($this->adjustSaleDisplayAmount($amount), $show_currency, $business_details);
+        };
+
+        $format_without_symbol = function ($amount) use ($business_details) {
+            return $this->num_f($this->adjustSaleDisplayAmount($amount), false, $business_details);
+        };
+
+        if (! empty($output['lines'])) {
+            foreach ($output['lines'] as $line_index => $line) {
+                $quantity = $line['quantity_uf'] ?? $this->parseReceiptDisplayAmount($line['quantity'] ?? 0, $business_details);
+
+                if (isset($line['unit_price_uf'])) {
+                    $output['lines'][$line_index]['unit_price'] = $format_without_symbol($line['unit_price_uf']);
+                    $output['lines'][$line_index]['unit_price_exc_tax'] = $format_without_symbol($line['unit_price_uf']);
+                }
+
+                if (isset($line['unit_price_inc_tax_uf'])) {
+                    $output['lines'][$line_index]['unit_price_inc_tax'] = $format_without_symbol($line['unit_price_inc_tax_uf']);
+                } elseif (isset($line['unit_price_uf'], $line['tax_unformatted'])) {
+                    $output['lines'][$line_index]['unit_price_inc_tax'] = $format_without_symbol($line['unit_price_uf'] + $line['tax_unformatted']);
+                }
+
+                if (isset($line['unit_price_before_discount_uf'])) {
+                    $output['lines'][$line_index]['unit_price_before_discount'] = $format_without_symbol($line['unit_price_before_discount_uf']);
+                }
+
+                if (isset($line['base_unit_price_uf'])) {
+                    $output['lines'][$line_index]['base_unit_price'] = $format_without_symbol($line['base_unit_price_uf']);
+                }
+
+                if (isset($line['tax_unformatted'])) {
+                    $output['lines'][$line_index]['tax'] = $format_without_symbol($line['tax_unformatted']);
+                }
+
+                if (isset($line['price_exc_tax'])) {
+                    $output['lines'][$line_index]['price_exc_tax'] = $this->adjustSaleDisplayAmount($line['price_exc_tax']);
+                }
+
+                if (isset($line['line_total_uf'])) {
+                    $output['lines'][$line_index]['line_total'] = $format_without_symbol($line['line_total_uf']);
+                }
+
+                if (isset($line['line_total_exc_tax_uf'])) {
+                    $output['lines'][$line_index]['line_total_exc_tax'] = $format_without_symbol($line['line_total_exc_tax_uf']);
+                } elseif (isset($line['unit_price_uf'])) {
+                    $output['lines'][$line_index]['line_total_exc_tax'] = $format_without_symbol($line['unit_price_uf'] * $quantity);
+                }
+
+                if (isset($line['line_discount_uf'])) {
+                    $line_discount = $format_without_symbol($line['line_discount_uf']);
+                    if (! empty($line['line_discount_percent'])) {
+                        $line_discount .= ' ('.$line['line_discount_percent'].'%)';
+                    }
+                    $output['lines'][$line_index]['line_discount'] = $line_discount;
+                    $output['lines'][$line_index]['total_line_discount'] = $format_without_symbol($line['line_discount_uf'] * $quantity);
+                }
+
+                if (! empty($line['group_tax_details'])) {
+                    foreach ($line['group_tax_details'] as $tax_index => $tax_detail) {
+                        if (isset($tax_detail['calculated_tax'])) {
+                            $output['lines'][$line_index]['group_tax_details'][$tax_index]['calculated_tax'] = $this->adjustSaleDisplayAmount($tax_detail['calculated_tax']);
+                        }
+                    }
+                }
+
+                if (! empty($line['modifiers'])) {
+                    foreach ($line['modifiers'] as $modifier_index => $modifier) {
+                        if (isset($modifier['unit_price_uf'])) {
+                            $output['lines'][$line_index]['modifiers'][$modifier_index]['unit_price_exc_tax'] = $format_without_symbol($modifier['unit_price_uf']);
+                        }
+                        if (isset($modifier['unit_price_inc_tax_uf'])) {
+                            $output['lines'][$line_index]['modifiers'][$modifier_index]['unit_price_inc_tax'] = $format_without_symbol($modifier['unit_price_inc_tax_uf']);
+                        }
+                        if (isset($modifier['line_total_uf'])) {
+                            $output['lines'][$line_index]['modifiers'][$modifier_index]['line_total'] = $format_without_symbol($modifier['line_total_uf']);
+                        }
+                    }
+                }
+            }
+        }
+
+        $subtotal = $transaction->total_before_tax;
+        $output['subtotal'] = ($subtotal != 0) ? $format($subtotal) : 0;
+        $output['subtotal_unformatted'] = ($subtotal != 0) ? $this->adjustSaleDisplayAmount($subtotal) : 0;
+        if (isset($output['subtotal_exc_tax'])) {
+            $output['subtotal_exc_tax'] = $format($this->parseReceiptDisplayAmount($output['subtotal_exc_tax'], $business_details));
+        }
+        if (isset($output['total_line_discount'])) {
+            $total_line_discount = $this->parseReceiptDisplayAmount($output['total_line_discount'], $business_details);
+            $output['total_line_discount'] = ! empty($total_line_discount) ? $format($total_line_discount) : 0;
+        }
+
+        $output['round_off'] = $format($transaction->round_off_amount);
+        $output['round_off_amount'] = $this->adjustSaleDisplayAmount($transaction->round_off_amount);
+
+        if (isset($output['total_exempt_uf'])) {
+            $total_exempt = $output['total_exempt_uf'];
+            $output['total_exempt'] = $format($total_exempt);
+            $output['total_exempt_uf'] = $this->adjustSaleDisplayAmount($total_exempt);
+            $output['taxed_subtotal'] = $this->num_f(max(0, $output['subtotal_unformatted'] - $output['total_exempt_uf']), $show_currency, $business_details);
+        }
+
+        $discount = $transaction->discount_type == 'percentage'
+            ? ($transaction->discount_amount / 100) * $transaction->total_before_tax
+            : $transaction->discount_amount;
+        $output['discount'] = ($discount != 0) ? $format($discount) : 0;
+        $output['discount_amount_unformatted'] = $this->adjustSaleDisplayAmount($discount);
+
+        if ($business_details->enable_rp == 1 && ! empty($transaction->rp_redeemed)) {
+            $output['reward_point_amount'] = $format($transaction->rp_redeemed_amount);
+        }
+
+        if (! empty($output['taxes'])) {
+            foreach ($output['taxes'] as $key => $value) {
+                $output['taxes'][$key] = $format($this->parseReceiptDisplayAmount($value, $business_details));
+            }
+        }
+
+        $output['tax'] = ($transaction->tax_amount != 0) ? $format($transaction->tax_amount) : 0;
+        if (! empty($transaction->tax) && $transaction->tax_amount != 0 && $transaction->tax->is_tax_group) {
+            $output['group_tax_details'] = [];
+            foreach ($this->groupTaxDetails($transaction->tax, $transaction->tax_amount) as $value) {
+                $output['group_tax_details'][$value['name']] = $format($value['calculated_tax']);
+            }
+        }
+
+        $output['shipping_charges'] = ($transaction->shipping_charges != 0) ? $format($transaction->shipping_charges) : 0;
+        $output['packing_charge'] = ($transaction->packing_charge != 0) ? $format($transaction->packing_charge) : 0;
+
+        $output['total'] = $format($transaction->final_total);
+        $output['total_unformatted'] = $this->adjustSaleDisplayAmount($transaction->final_total);
+        if (! empty($output['total_in_words'])) {
+            $word_format = $il->common_settings['num_to_word_format'] ?? 'international';
+            $output['total_in_words'] = $this->numToWord($output['total_unformatted'], null, $word_format);
+        }
+
+        if ($transaction->type == 'sell' && $transaction->status == 'final') {
+            $paid_amount = $this->getTotalPaid($transaction->id);
+            $due = $transaction->final_total - $paid_amount;
+
+            $output['total_paid'] = ($paid_amount == 0) ? 0 : $format($paid_amount);
+            $output['total_due'] = ($due == 0) ? 0 : $format($due);
+
+            if (isset($output['all_due'])) {
+                $all_due = $this->getContactDue($transaction->contact_id);
+                $output['all_due'] = empty($all_due) ? 0 : $format($all_due);
+            }
+
+            if (isset($output['total_previous_due'])) {
+                $all_due = $this->getContactDue($transaction->contact_id);
+                $previous_due = max(0, $all_due - $due);
+                $output['total_previous_due'] = ($previous_due == 0) ? 0 : $format($previous_due);
+            }
+
+            if (! empty($output['payments'])) {
+                $payment_index = 0;
+                foreach ($transaction->payment_lines as $payment_line) {
+                    if (isset($output['payments'][$payment_index])) {
+                        $output['payments'][$payment_index]['amount'] = $format($payment_line->amount);
+                    }
+                    $payment_index++;
+                }
+            }
+        }
+
+        $output['additional_expenses'] = [];
+        for ($i = 1; $i <= 4; $i++) {
+            $key = 'additional_expense_key_'.$i;
+            $value = 'additional_expense_value_'.$i;
+            if (! empty($transaction->{$value}) && ! empty($transaction->{$key})) {
+                $output['additional_expenses'][$transaction->{$key}] = $format($transaction->{$value});
+            }
+        }
+
+        return $output;
+    }
+
+    protected function parseReceiptDisplayAmount($value, $business_details)
+    {
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        $value = strip_tags((string) $value);
+        $thousand_separator = $business_details->thousand_separator ?? ',';
+        $decimal_separator = $business_details->decimal_separator ?? '.';
+
+        if ($thousand_separator !== '') {
+            $value = str_replace($thousand_separator, '', $value);
+        }
+        if ($decimal_separator !== '.') {
+            $value = str_replace($decimal_separator, '.', $value);
+        }
+
+        $value = preg_replace('/[^0-9.\-]/', '', $value);
+
+        return is_numeric($value) ? (float) $value : 0;
     }
 
     /**
@@ -2067,6 +2273,7 @@ class TransactionUtil extends Util
                 'unit_price_inc_tax_uf' => $line->unit_price_inc_tax,
                 'unit_price_exc_tax' => $this->num_f($line->unit_price, false, $business_details),
                 'base_unit_price' => $this->num_f($base_unit_price, false, $business_details),
+                'base_unit_price_uf' => $base_unit_price,
                 'price_exc_tax' => $line->quantity * $line->unit_price,
                 'unit_price_before_discount' => $this->num_f($line->unit_price_before_discount, false, $business_details),
                 'unit_price_before_discount_uf' => $line->unit_price_before_discount,
@@ -2198,10 +2405,13 @@ class TransactionUtil extends Util
                         //Field for 3rd column
                         'unit_price_inc_tax' => $this->num_f($modifier_line->unit_price_inc_tax, false, $business_details),
                         'unit_price_exc_tax' => $this->num_f($modifier_line->unit_price, false, $business_details),
+                        'unit_price_uf' => $modifier_line->unit_price,
+                        'unit_price_inc_tax_uf' => $modifier_line->unit_price_inc_tax,
                         'price_exc_tax' => $modifier_line->quantity * $modifier_line->unit_price,
 
                         //Fields for 4th column
                         'line_total' => $this->num_f($modifier_line->unit_price_inc_tax * $line->quantity, false, $business_details),
+                        'line_total_uf' => $modifier_line->unit_price_inc_tax * $line->quantity,
                     ];
 
                     if ($il->show_sku == 1) {

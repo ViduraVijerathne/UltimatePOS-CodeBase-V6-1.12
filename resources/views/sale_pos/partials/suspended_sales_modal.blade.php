@@ -28,7 +28,7 @@
 					              {{@format_date($sale->transaction_date)}}<br>
 					              <strong><i class="fa fa-user"></i> {{$sale->name}}</strong></p>
 					              <p><i class="fa fa-cubes"></i>@lang('lang_v1.total_items'): {{count($sale->sell_lines)}}<br>
-					              <i class="fas fa-money-bill-alt"></i> @lang('sale.total'): <span class="display_currency" data-currency_symbol=true>{{$sale->final_total}}</span>
+					              <i class="fas fa-money-bill-alt"></i> @lang('sale.total'): <span class="display_currency" data-currency_symbol=true>{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sale->final_total) }}</span>
 					              </p>
 					              @if($is_tables_enabled && !empty($sale->table->name))
 					              	@lang('restaurant.table'): {{$sale->table->name}}

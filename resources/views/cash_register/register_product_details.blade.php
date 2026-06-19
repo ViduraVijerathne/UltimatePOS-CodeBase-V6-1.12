@@ -36,10 +36,10 @@
           </td>
           <td>
             <span class="display_currency" data-currency_symbol="true">
-              {{$detail->total_amount}}
+              {{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($detail->total_amount) }}
             </span>
             @php
-              $total_amount += $detail->total_amount;
+              $total_amount += app(\App\Utils\Util::class)->adjustSaleDisplayAmount($detail->total_amount);
             @endphp
           </td>
         </tr>
@@ -47,9 +47,9 @@
 
       
       @php
-        $total_amount += ($details['transaction_details']->total_tax - $details['transaction_details']->total_discount);
+        $total_amount += app(\App\Utils\Util::class)->adjustSaleDisplayAmount($details['transaction_details']->total_tax - $details['transaction_details']->total_discount);
 
-        $total_amount += $details['transaction_details']->total_shipping_charges;
+        $total_amount += app(\App\Utils\Util::class)->adjustSaleDisplayAmount($details['transaction_details']->total_shipping_charges);
       @endphp
 
       <!-- Final details -->
@@ -63,7 +63,7 @@
           @if($details['transaction_details']->total_tax != 0)
             @lang('sale.order_tax'): (+)
             <span class="display_currency" data-currency_symbol="true">
-              {{$details['transaction_details']->total_tax}}
+              {{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($details['transaction_details']->total_tax) }}
             </span>
             <br/>
           @endif
@@ -71,14 +71,14 @@
           @if($details['transaction_details']->total_discount != 0)
             @lang('sale.discount'): (-)
             <span class="display_currency" data-currency_symbol="true">
-              {{$details['transaction_details']->total_discount}}
+              {{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($details['transaction_details']->total_discount) }}
             </span>
             <br/>
           @endif
           @if($details['transaction_details']->total_shipping_charges != 0)
             @lang('lang_v1.total_shipping_charges'): (+)
             <span class="display_currency" data-currency_symbol="true">
-              {{$details['transaction_details']->total_shipping_charges}}
+              {{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($details['transaction_details']->total_shipping_charges) }}
             </span>
             <br/>
           @endif
@@ -124,10 +124,10 @@
           </td>
           <td>
             <span class="display_currency" data-currency_symbol="true">
-              {{$detail->total_amount}}
+              {{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($detail->total_amount) }}
             </span>
             @php
-              $total_amount += $detail->total_amount;
+              $total_amount += app(\App\Utils\Util::class)->adjustSaleDisplayAmount($detail->total_amount);
             @endphp
           </td>
         </tr>
@@ -135,9 +135,9 @@
 
       
       @php
-        $total_amount += ($details['transaction_details']->total_tax - $details['transaction_details']->total_discount);
+        $total_amount += app(\App\Utils\Util::class)->adjustSaleDisplayAmount($details['transaction_details']->total_tax - $details['transaction_details']->total_discount);
 
-        $total_amount += $details['transaction_details']->total_shipping_charges;
+        $total_amount += app(\App\Utils\Util::class)->adjustSaleDisplayAmount($details['transaction_details']->total_shipping_charges);
       @endphp
 
       <!-- Final details -->
@@ -150,7 +150,7 @@
           @if($details['transaction_details']->total_tax != 0)
             @lang('sale.order_tax'): (+)
             <span class="display_currency" data-currency_symbol="true">
-              {{$details['transaction_details']->total_tax}}
+              {{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($details['transaction_details']->total_tax) }}
             </span>
             <br/>
           @endif
@@ -158,14 +158,14 @@
           @if($details['transaction_details']->total_discount != 0)
             @lang('sale.discount'): (-)
             <span class="display_currency" data-currency_symbol="true">
-              {{$details['transaction_details']->total_discount}}
+              {{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($details['transaction_details']->total_discount) }}
             </span>
             <br/>
           @endif
           @if($details['transaction_details']->total_shipping_charges != 0)
             @lang('lang_v1.total_shipping_charges'): (+)
             <span class="display_currency" data-currency_symbol="true">
-              {{$details['transaction_details']->total_shipping_charges}}
+              {{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($details['transaction_details']->total_shipping_charges) }}
             </span>
             <br/>
           @endif
@@ -205,16 +205,13 @@
             </td>
             <td>
               <span class="display_currency" data-currency_symbol="true">
-                {{$detail->total_sales}}
+                {{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($detail->total_sales) }}
               </span>
               @php
-                $total_sales += $detail->total_sales;
+                $total_sales += app(\App\Utils\Util::class)->adjustSaleDisplayAmount($detail->total_sales);
               @endphp
             </td>
           </tr>
-          @php
-            $total_sales += $detail->total_sales;
-          @endphp
         @endforeach
         <!-- Final details -->
         <tr class="success">
@@ -223,7 +220,7 @@
           <th>
             @lang('lang_v1.grand_total'):
             <span class="display_currency" data-currency_symbol="true">
-              {{$total_amount}}
+              {{$total_sales}}
             </span>
           </th>
         </tr>

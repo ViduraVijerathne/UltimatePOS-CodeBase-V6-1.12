@@ -153,16 +153,39 @@ class Util
             return false;
         }
 
-        $configured = (string) config('constants.special_sale_view_user', '');
-        if ($configured === '') {
+        return $this->usernameInCsvList($user->username, config('constants.special_sale_view_user', ''));
+    }
+
+    public function usernameInCsvList($username, $configured_usernames)
+    {
+        $username = strtolower(trim((string) $username));
+        if ($username === '') {
             return false;
         }
 
-        $usernames = array_filter(array_map(function ($value) {
-            return strtolower(trim($value));
-        }, explode(',', $configured)));
+        $usernames = $this->parseUsernameCsvList($configured_usernames);
 
-        return in_array(strtolower($user->username), $usernames, true);
+        return in_array($username, $usernames, true);
+    }
+
+    public function parseUsernameCsvList($configured_usernames)
+    {
+        if (is_array($configured_usernames)) {
+            $values = $configured_usernames;
+        } else {
+            $configured_usernames = trim((string) $configured_usernames);
+            if ($configured_usernames === '') {
+                return [];
+            }
+
+            $values = explode(',', $configured_usernames);
+        }
+
+        return array_values(array_unique(array_filter(array_map(function ($value) {
+            return strtolower(trim((string) $value));
+        }, $values), function ($value) {
+            return $value !== '';
+        })));
     }
 
     public function getSaleDecreasePercentage()
