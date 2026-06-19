@@ -239,10 +239,11 @@ class SellReturnController extends Controller
                     }
                 )
                 ->removeColumn('id')
-                ->editColumn(
-                    'final_total',
-                    '<span class="display_currency final_total" data-currency_symbol="true" data-orig-value="{{$final_total}}">{{$final_total}}</span>'
-                )
+                ->editColumn('final_total', function ($row) {
+                    $final_total = $this->transactionUtil->adjustSaleDisplayAmount($row->final_total);
+
+                    return '<span class="display_currency final_total" data-currency_symbol="true" data-orig-value="' . $final_total . '">' . $final_total . '</span>';
+                })
                 ->editColumn('parent_sale', function ($row) {
                     return '<button type="button" class="btn btn-link btn-modal" data-container=".view_modal" data-href="' . action([\App\Http\Controllers\SellController::class, 'show'], [$row->parent_sale_id]) . '">' . $row->parent_sale . '</button>';
                 })
@@ -254,6 +255,7 @@ class SellReturnController extends Controller
                 )
                 ->addColumn('payment_due', function ($row) {
                     $due = $row->final_total - $row->amount_paid;
+                    $due = $this->transactionUtil->adjustSaleDisplayAmount($due);
 
                     return '<span class="display_currency payment_due" data-currency_symbol="true" data-orig-value="' . $due . '">' . $due . '</sapn>';
                 })

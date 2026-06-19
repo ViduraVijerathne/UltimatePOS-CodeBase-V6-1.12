@@ -234,6 +234,10 @@ class AppServiceProvider extends ServiceProvider
             echo $formated_number; ?>';
         });
 
+        Blade::directive('format_sale_currency', function ($number) {
+            return '<?php echo app(\App\Utils\Util::class)->formatSaleCurrency(' . $number . '); ?>';
+        });
+
         $this->registerCommands();
     }
 

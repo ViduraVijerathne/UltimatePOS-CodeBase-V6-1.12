@@ -268,11 +268,19 @@ class ReportController extends Controller
                 )
                 ->editColumn(
                     'total_sell_return',
-                    '<span class="total_sell_return" data-orig-value="{{$total_sell_return}}">@format_currency($total_sell_return)</span>'
+                    function ($row) {
+                        $total_sell_return = $this->transactionUtil->adjustSaleDisplayAmount($row->total_sell_return);
+
+                        return '<span class="total_sell_return" data-orig-value="'.$total_sell_return.'">'.$this->transactionUtil->num_f($total_sell_return, true).'</span>';
+                    }
                 )
                 ->editColumn(
                     'total_invoice',
-                    '<span class="total_invoice" data-orig-value="{{$total_invoice}}">@format_currency($total_invoice)</span>'
+                    function ($row) {
+                        $total_invoice = $this->transactionUtil->adjustSaleDisplayAmount($row->total_invoice);
+
+                        return '<span class="total_invoice" data-orig-value="'.$total_invoice.'">'.$this->transactionUtil->num_f($total_invoice, true).'</span>';
+                    }
                 )
 
                 ->addColumn('due', function ($row) {
@@ -284,6 +292,7 @@ class ReportController extends Controller
                         $due -= $row->opening_balance - $row->opening_balance_paid;
                     } else {
                         $due += $row->opening_balance - $row->opening_balance_paid;
+                        $due = $this->transactionUtil->adjustSaleDisplayAmount($due);
                     }
 
                     $due_formatted = $this->transactionUtil->num_f($due, true);

@@ -57,9 +57,9 @@
           </div>
           <div class="col-md-6">
             <div class="well">
-              <strong>@lang('report.total_sell'): </strong><span class="display_currency" data-currency_symbol="true">{{ $contact_details->total_invoice }}</span><br>
-              <strong>@lang('contact.total_paid'): </strong><span class="display_currency" data-currency_symbol="true">{{ $contact_details->total_paid }}</span><br>
-              <strong>@lang('contact.total_sale_due'): </strong><span class="display_currency" data-currency_symbol="true">{{ $contact_details->total_invoice - $contact_details->total_paid }}</span><br>
+              <strong>@lang('report.total_sell'): </strong><span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($contact_details->total_invoice) }}</span><br>
+              <strong>@lang('contact.total_paid'): </strong><span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($contact_details->total_paid) }}</span><br>
+              <strong>@lang('contact.total_sale_due'): </strong><span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($contact_details->total_invoice - $contact_details->total_paid) }}</span><br>
               @if(!empty($contact_details->opening_balance) || $contact_details->opening_balance != '0.00')
                   <strong>@lang('lang_v1.opening_balance'): </strong>
                   <span class="display_currency" data-currency_symbol="true">
@@ -79,9 +79,9 @@
         </div>
         <div class="col-md-6">
           <div class="well">
-            <strong>@lang('lang_v1.total_sell_return'): </strong><span class="display_currency" data-currency_symbol="true">{{ $contact_details->total_sell_return }}</span><br>
-            <strong>@lang('lang_v1.total_sell_return_paid'): </strong><span class="display_currency" data-currency_symbol="true">{{ $contact_details->total_return_paid }}</span><br>
-            <strong>@lang('lang_v1.total_sell_return_due'): </strong><span class="display_currency" data-currency_symbol="true">{{ $contact_details->total_sell_return - $contact_details->total_return_paid }}</span>
+            <strong>@lang('lang_v1.total_sell_return'): </strong><span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($contact_details->total_sell_return) }}</span><br>
+            <strong>@lang('lang_v1.total_sell_return_paid'): </strong><span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($contact_details->total_return_paid) }}</span><br>
+            <strong>@lang('lang_v1.total_sell_return_due'): </strong><span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($contact_details->total_sell_return - $contact_details->total_return_paid) }}</span>
           </div>
         </div>
         @endif

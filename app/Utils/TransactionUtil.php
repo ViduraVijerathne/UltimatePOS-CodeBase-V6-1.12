@@ -2635,7 +2635,13 @@ class TransactionUtil extends Util
         $output['total_shipping_charges'] = $sell_details->total_shipping_charges;
         $output['total_additional_expense'] = $sell_details->total_expense;
 
-        return $output;
+        return $this->adjustSaleDisplayData($output, [
+            'total_sell_inc_tax',
+            'total_sell_exc_tax',
+            'invoice_due',
+            'total_shipping_charges',
+            'total_additional_expense',
+        ]);
     }
 
     public function getTotalLedgerDiscount($business_id, $start_date = null, $end_date = null)

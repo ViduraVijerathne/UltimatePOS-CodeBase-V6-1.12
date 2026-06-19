@@ -270,6 +270,13 @@ class HomeController extends Controller
 
             //NET = TOTAL SALES - INVOICE DUE - EXPENSE
             $output['net'] = $output['total_sell'] - $output['invoice_due'] - $output['total_expense'];
+            $output = $this->commonUtil->adjustSaleDisplayData($output, [
+                'total_sell',
+                'total_sell_return',
+                'total_sell_return_paid',
+                'invoice_due',
+                'net',
+            ]);
 
             return $output;
         }
@@ -363,6 +370,7 @@ class HomeController extends Controller
                 ->addColumn('due', function ($row) {
                     $total_paid = ! empty($row->total_paid) ? $row->total_paid : 0;
                     $due = $row->final_total - $total_paid;
+                    $due = $this->commonUtil->adjustSaleDisplayAmount($due);
 
                     return '<span class="display_currency" data-currency_symbol="true">'.
                     $due.'</span>';

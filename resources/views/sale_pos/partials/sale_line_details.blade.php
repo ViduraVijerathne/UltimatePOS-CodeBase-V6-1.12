@@ -86,24 +86,24 @@
             @endif
             <td>
                 @if(!empty($for_ledger))
-                    @format_currency($sell_line->unit_price_before_discount)
+                    @format_sale_currency($sell_line->unit_price_before_discount)
                 @else
-                    <span class="display_currency" data-currency_symbol="true">{{ $sell_line->unit_price_before_discount }}</span>
+                    <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell_line->unit_price_before_discount) }}</span>
                 @endif
             </td>
             <td>
                 @if(!empty($for_ledger))
-                    @format_currency($sell_line->get_discount_amount())
+                    @format_sale_currency($sell_line->get_discount_amount())
                 @else
-                    <span class="display_currency" data-currency_symbol="true">{{ $sell_line->get_discount_amount() }}</span>
+                    <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell_line->get_discount_amount()) }}</span>
                 @endif
                 @if($sell_line->line_discount_type == 'percentage') ({{$sell_line->line_discount_amount}}%) @endif
             </td>
             <td>
                 @if(!empty($for_ledger))
-                    @format_currency($sell_line->item_tax)
+                    @format_sale_currency($sell_line->item_tax)
                 @else
-                    <span class="display_currency" data-currency_symbol="true">{{ $sell_line->item_tax }}</span> 
+                    <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell_line->item_tax) }}</span> 
                 @endif
                 @if(!empty($taxes[$sell_line->tax_id]))
                 ( {{ $taxes[$sell_line->tax_id]}} )
@@ -111,16 +111,16 @@
             </td>
             <td>
                 @if(!empty($for_ledger))
-                    @format_currency($sell_line->unit_price_inc_tax)
+                    @format_sale_currency($sell_line->unit_price_inc_tax)
                 @else
-                    <span class="display_currency" data-currency_symbol="true">{{ $sell_line->unit_price_inc_tax }}</span>
+                    <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell_line->unit_price_inc_tax) }}</span>
                 @endif
             </td>
             <td>
                 @if(!empty($for_ledger))
-                    @format_currency($sell_line->quantity * $sell_line->unit_price_inc_tax)
+                    @format_sale_currency($sell_line->quantity * $sell_line->unit_price_inc_tax)
                 @else
-                    <span class="display_currency" data-currency_symbol="true">{{ $sell_line->quantity * $sell_line->unit_price_inc_tax }}</span>
+                    <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell_line->quantity * $sell_line->unit_price_inc_tax) }}</span>
                 @endif
             </td>
         </tr>
@@ -143,9 +143,9 @@
                 @endif
                 <td>
                     @if(!empty($for_ledger))
-                        @format_currency($modifier->unit_price)
+                        @format_sale_currency($modifier->unit_price)
                     @else
-                        <span class="display_currency" data-currency_symbol="true">{{ $modifier->unit_price }}</span>
+                        <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($modifier->unit_price) }}</span>
                     @endif
                 </td>
                 <td>
@@ -153,9 +153,9 @@
                 </td>
                 <td>
                     @if(!empty($for_ledger))
-                        @format_currency($modifier->item_tax)
+                        @format_sale_currency($modifier->item_tax)
                     @else
-                        <span class="display_currency" data-currency_symbol="true">{{ $modifier->item_tax }}</span> 
+                        <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($modifier->item_tax) }}</span> 
                     @endif
                     @if(!empty($taxes[$modifier->tax_id]))
                     ( {{ $taxes[$modifier->tax_id]}} )
@@ -163,16 +163,16 @@
                 </td>
                 <td>
                     @if(!empty($for_ledger))
-                        @format_currency($modifier->unit_price_inc_tax)
+                        @format_sale_currency($modifier->unit_price_inc_tax)
                     @else
-                        <span class="display_currency" data-currency_symbol="true">{{ $modifier->unit_price_inc_tax }}</span>
+                        <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($modifier->unit_price_inc_tax) }}</span>
                     @endif
                 </td>
                 <td>
                     @if(!empty($for_ledger))
-                        @format_currency($modifier->quantity * $modifier->unit_price_inc_tax)
+                        @format_sale_currency($modifier->quantity * $modifier->unit_price_inc_tax)
                     @else
-                        <span class="display_currency" data-currency_symbol="true">{{ $modifier->quantity * $modifier->unit_price_inc_tax }}</span>
+                        <span class="display_currency" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($modifier->quantity * $modifier->unit_price_inc_tax) }}</span>
                     @endif
                 </td>
             </tr>

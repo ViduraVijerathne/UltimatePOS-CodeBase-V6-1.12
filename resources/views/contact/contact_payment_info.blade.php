@@ -19,17 +19,17 @@
     <strong>@lang('report.total_sell')</strong>
     <p class="text-muted">
     <span class="display_currency" data-currency_symbol="true">
-    {{ $contact->total_invoice }}</span>
+    {{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($contact->total_invoice) }}</span>
     </p>
     <strong>@lang('contact.total_sale_paid')</strong>
     <p class="text-muted">
     <span class="display_currency" data-currency_symbol="true">
-    {{ $contact->invoice_received }}</span>
+    {{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($contact->invoice_received) }}</span>
     </p>
     <strong>@lang('contact.total_sale_due')</strong>
     <p class="text-muted">
     <span class="display_currency" data-currency_symbol="true">
-    {{ $contact->total_invoice - $contact->invoice_received }}</span>
+    {{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($contact->total_invoice - $contact->invoice_received) }}</span>
     </p>
 @endif
 @if(!empty($contact->opening_balance) && $contact->opening_balance != '0.00')

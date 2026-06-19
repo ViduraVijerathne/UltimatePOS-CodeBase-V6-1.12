@@ -360,22 +360,26 @@ class SellController extends Controller
                     }
                 )
                 ->removeColumn('id')
-                ->editColumn(
-                    'final_total',
-                    '<span class="final-total" data-orig-value="{{$final_total}}">@format_currency($final_total)</span>'
-                )
-                ->editColumn(
-                    'tax_amount',
-                    '<span class="total-tax" data-orig-value="{{$tax_amount}}">@format_currency($tax_amount)</span>'
-                )
-                ->editColumn(
-                    'total_paid',
-                    '<span class="total-paid" data-orig-value="{{$total_paid}}">@format_currency($total_paid)</span>'
-                )
-                ->editColumn(
-                    'total_before_tax',
-                    '<span class="total_before_tax" data-orig-value="{{$total_before_tax}}">@format_currency($total_before_tax)</span>'
-                )
+                ->editColumn('final_total', function ($row) {
+                    $final_total = $this->transactionUtil->adjustSaleDisplayAmount($row->final_total);
+
+                    return '<span class="final-total" data-orig-value="' . $final_total . '">' . $this->transactionUtil->num_f($final_total, true) . '</span>';
+                })
+                ->editColumn('tax_amount', function ($row) {
+                    $tax_amount = $this->transactionUtil->adjustSaleDisplayAmount($row->tax_amount);
+
+                    return '<span class="total-tax" data-orig-value="' . $tax_amount . '">' . $this->transactionUtil->num_f($tax_amount, true) . '</span>';
+                })
+                ->editColumn('total_paid', function ($row) {
+                    $total_paid = $this->transactionUtil->adjustSaleDisplayAmount($row->total_paid);
+
+                    return '<span class="total-paid" data-orig-value="' . $total_paid . '">' . $this->transactionUtil->num_f($total_paid, true) . '</span>';
+                })
+                ->editColumn('total_before_tax', function ($row) {
+                    $total_before_tax = $this->transactionUtil->adjustSaleDisplayAmount($row->total_before_tax);
+
+                    return '<span class="total_before_tax" data-orig-value="' . $total_before_tax . '">' . $this->transactionUtil->num_f($total_before_tax, true) . '</span>';
+                })
                 ->editColumn(
                     'discount_amount',
                     function ($row) {
@@ -384,6 +388,8 @@ class SellController extends Controller
                         if (!empty($discount) && $row->discount_type == 'percentage') {
                             $discount = $row->total_before_tax * ($discount / 100);
                         }
+
+                        $discount = $this->transactionUtil->adjustSaleDisplayAmount($discount);
 
                         return '<span class="total-discount" data-orig-value="' . $discount . '">' . $this->transactionUtil->num_f($discount, true) . '</span>';
                     }
@@ -403,6 +409,7 @@ class SellController extends Controller
                 )
                 ->addColumn('total_remaining', function ($row) {
                     $total_remaining = $row->final_total - $row->total_paid;
+                    $total_remaining = $this->transactionUtil->adjustSaleDisplayAmount($total_remaining);
                     $total_remaining_html = '<span class="payment_due" data-orig-value="' . $total_remaining . '">' . $this->transactionUtil->num_f($total_remaining, true) . '</span>';
 
                     return $total_remaining_html;
@@ -411,6 +418,7 @@ class SellController extends Controller
                     $return_due_html = '';
                     if (!empty($row->return_exists)) {
                         $return_due = $row->amount_return - $row->return_paid;
+                        $return_due = $this->transactionUtil->adjustSaleDisplayAmount($return_due);
                         $return_due_html .= '<a href="' . action([\App\Http\Controllers\TransactionPaymentController::class, 'show'], [$row->return_transaction_id]) . '" class="view_purchase_return_payment_modal"><span class="sell_return_due" data-orig-value="' . $return_due . '">' . $this->transactionUtil->num_f($return_due, true) . '</span></a>';
                     }
 

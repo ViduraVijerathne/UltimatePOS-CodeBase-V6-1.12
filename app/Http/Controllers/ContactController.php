@@ -364,14 +364,18 @@ class ContactController extends Controller
         $contacts = Datatables::of($query)
             ->addColumn('address', '{{implode(", ", array_filter([$address_line_1, $address_line_2, $city, $state, $country, $zip_code]))}}')
         //    + $sell_return_paid add this in due because after paymnet for sell return not calculated 
-            ->addColumn(
-                'due',
-                '<span class="contact_due" data-orig-value="{{$total_invoice - $invoice_received - $total_ledger_discount - $total_sell_return  + $sell_return_paid}}" data-highlight=true>@format_currency($total_invoice - $invoice_received - $total_ledger_discount -  $total_sell_return + $sell_return_paid)  </span>'
-            )
-            ->addColumn(
-                'return_due',
-                '<span class="return_due" data-orig-value="{{$total_sell_return - $sell_return_paid}}" data-highlight=false>@format_currency($total_sell_return - $sell_return_paid)</span>'
-            )
+            ->addColumn('due', function ($row) {
+                $due = $row->total_invoice - $row->invoice_received - $row->total_ledger_discount - $row->total_sell_return + $row->sell_return_paid;
+                $due = $this->transactionUtil->adjustSaleDisplayAmount($due);
+
+                return '<span class="contact_due" data-orig-value="' . $due . '" data-highlight=true>' . $this->transactionUtil->num_f($due, true) . '</span>';
+            })
+            ->addColumn('return_due', function ($row) {
+                $return_due = $row->total_sell_return - $row->sell_return_paid;
+                $return_due = $this->transactionUtil->adjustSaleDisplayAmount($return_due);
+
+                return '<span class="return_due" data-orig-value="' . $return_due . '" data-highlight=false>' . $this->transactionUtil->num_f($return_due, true) . '</span>';
+            })
             ->addColumn(
                 'action',
                 function ($row) {

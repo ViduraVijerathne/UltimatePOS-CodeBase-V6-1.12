@@ -265,12 +265,12 @@
             <tr>
               <th>{{ __('sale.total') }}: </th>
               <td></td>
-              <td><span class="display_currency pull-right" data-currency_symbol="true">{{ $sell->total_before_tax }}</span></td>
+              <td><span class="display_currency pull-right" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell->total_before_tax) }}</span></td>
             </tr>
             <tr>
               <th>{{ __('sale.discount') }}:</th>
               <td><b>(-)</b></td>
-              <td><div class="pull-right"><span class="display_currency" @if( $sell->discount_type == 'fixed') data-currency_symbol="true" @endif>{{ $sell->discount_amount }}</span> @if( $sell->discount_type == 'percentage') {{ '%'}} @endif</span></div></td>
+              <td><div class="pull-right"><span class="display_currency" @if( $sell->discount_type == 'fixed') data-currency_symbol="true" @endif>{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell->discount_type == 'percentage' ? ($sell->total_before_tax * ($sell->discount_amount / 100)) : $sell->discount_amount) }}</span> @if( $sell->discount_type == 'percentage') {{ '%'}} @endif</span></div></td>
             </tr>
             @if(in_array('types_of_service' ,$enabled_modules) && !empty($sell->packing_charge))
               <tr>
@@ -292,7 +292,7 @@
               <td class="text-right">
                 @if(!empty($order_taxes))
                   @foreach($order_taxes as $k => $v)
-                    <strong><small>{{$k}}</small></strong> - <span class="display_currency pull-right" data-currency_symbol="true">{{ $v }}</span><br>
+                    <strong><small>{{$k}}</small></strong> - <span class="display_currency pull-right" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($v) }}</span><br>
                   @endforeach
                 @else
                 0.00
@@ -306,7 +306,7 @@
               <td class="text-right">
                 @if(!empty($line_taxes))
                   @foreach($line_taxes as $k => $v)
-                    <strong><small>{{$k}}</small></strong> - <span class="display_currency pull-right" data-currency_symbol="true">{{ $v }}</span><br>
+                    <strong><small>{{$k}}</small></strong> - <span class="display_currency pull-right" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($v) }}</span><br>
                   @endforeach
                 @else
                 0.00
@@ -317,52 +317,52 @@
             <tr>
               <th>{{ __('sale.shipping') }}: @if($sell->shipping_details)({{$sell->shipping_details}}) @endif</th>
               <td><b>(+)</b></td>
-              <td><span class="display_currency pull-right" data-currency_symbol="true">{{ $sell->shipping_charges }}</span></td>
+              <td><span class="display_currency pull-right" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell->shipping_charges) }}</span></td>
             </tr>
 
             @if( !empty( $sell->additional_expense_value_1 )  && !empty( $sell->additional_expense_key_1 ))
               <tr>
                 <th>{{ $sell->additional_expense_key_1 }}:</th>
                 <td><b>(+)</b></td>
-                <td><span class="display_currency pull-right" >{{ $sell->additional_expense_value_1 }}</span></td>
+                <td><span class="display_currency pull-right" >{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell->additional_expense_value_1) }}</span></td>
               </tr>
             @endif
             @if( !empty( $sell->additional_expense_value_2 )  && !empty( $sell->additional_expense_key_2 ))
               <tr>
                 <th>{{ $sell->additional_expense_key_2 }}:</th>
                 <td><b>(+)</b></td>
-                <td><span class="display_currency pull-right" >{{ $sell->additional_expense_value_2 }}</span></td>
+                <td><span class="display_currency pull-right" >{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell->additional_expense_value_2) }}</span></td>
               </tr>
             @endif
             @if( !empty( $sell->additional_expense_value_3 )  && !empty( $sell->additional_expense_key_3 ))
               <tr>
                 <th>{{ $sell->additional_expense_key_3 }}:</th>
                 <td><b>(+)</b></td>
-                <td><span class="display_currency pull-right" >{{ $sell->additional_expense_value_3 }}</span></td>
+                <td><span class="display_currency pull-right" >{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell->additional_expense_value_3) }}</span></td>
               </tr>
             @endif
             @if( !empty( $sell->additional_expense_value_4 ) && !empty( $sell->additional_expense_key_4 ))
               <tr>
                 <th>{{ $sell->additional_expense_key_4 }}:</th>
                 <td><b>(+)</b></td>
-                <td><span class="display_currency pull-right" >{{ $sell->additional_expense_value_4 }}</span></td>
+                <td><span class="display_currency pull-right" >{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell->additional_expense_value_4) }}</span></td>
               </tr>
             @endif
             <tr>
               <th>{{ __('lang_v1.round_off') }}: </th>
               <td></td>
-              <td><span class="display_currency pull-right" data-currency_symbol="true">{{ $sell->round_off_amount }}</span></td>
+              <td><span class="display_currency pull-right" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell->round_off_amount) }}</span></td>
             </tr>
             <tr>
               <th>{{ __('sale.total_payable') }}: </th>
               <td></td>
-              <td><span class="display_currency pull-right" data-currency_symbol="true">{{ $sell->final_total }}</span></td>
+              <td><span class="display_currency pull-right" data-currency_symbol="true">{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell->final_total) }}</span></td>
             </tr>
             @if($sell->type != 'sales_order')
             <tr>
               <th>{{ __('sale.total_paid') }}:</th>
               <td></td>
-              <td><span class="display_currency pull-right" data-currency_symbol="true" >{{ $total_paid }}</span></td>
+              <td><span class="display_currency pull-right" data-currency_symbol="true" >{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($total_paid) }}</span></td>
             </tr>
             <tr>
               <th>{{ __('sale.total_remaining') }}:</th>
@@ -372,7 +372,7 @@
                 @php
                   $total_paid = (string) $total_paid;
                 @endphp
-                <span class="display_currency pull-right" data-currency_symbol="true" >{{ $sell->final_total - $total_paid }}</span></td>
+                <span class="display_currency pull-right" data-currency_symbol="true" >{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($sell->final_total - $total_paid) }}</span></td>
             </tr>
             @endif
           </table>

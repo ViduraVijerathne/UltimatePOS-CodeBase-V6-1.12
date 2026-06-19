@@ -18,11 +18,73 @@ use DB;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 use Illuminate\Support\Str; // Add this at the top with other imports
+use Spatie\Permission\Models\Role;
 
 class Util
 {
+    /**
+     * Sale amount fields that are safe to adjust for read-only display.
+     *
+     * @var array<int, string>
+     */
+    protected $saleDisplayAmountFields = [
+        'final_total',
+        'total_before_tax',
+        'tax_amount',
+        'discount_amount',
+        'discount',
+        'discount_amount_unformatted',
+        'shipping_charges',
+        'packing_charge',
+        'round_off_amount',
+        'additional_expense_value_1',
+        'additional_expense_value_2',
+        'additional_expense_value_3',
+        'additional_expense_value_4',
+        'subtotal_unformatted',
+        'total_unformatted',
+        'total_paid',
+        'total_due',
+        'invoice_due',
+        'amount_paid',
+        'amount_return',
+        'return_paid',
+        'return_due',
+        'total_sell',
+        'total_sell_inc_tax',
+        'total_sell_exc_tax',
+        'total_sell_return',
+        'total_sell_return_paid',
+        'total_sell_return_due',
+        'total_invoice',
+        'invoice_received',
+        'opening_balance',
+        'opening_balance_paid',
+        'ledger_discount',
+        'balance_due',
+        'all_total_invoice',
+        'all_invoice_paid',
+        'all_balance_due',
+        'current_due',
+        'due_1_30_days',
+        'due_30_60_days',
+        'due_60_90_days',
+        'due_over_90_days',
+        'amount_due',
+        'total_sales',
+        'total_sale',
+        'total_refund',
+        'net',
+        'subtotal',
+        'total',
+        'taxed_subtotal',
+        'total_exempt_uf',
+        'total_line_discount',
+        'total_shipping_charges',
+        'total_additional_expense',
+    ];
+
     /**
      * This function unformats a number and returns them in plain eng format
      *
@@ -82,6 +144,85 @@ class Util
         }
 
         return $formatted;
+    }
+
+    public function isSpecialSaleViewUser($user = null)
+    {
+        $user = $user ?: Auth::user();
+        if (empty($user) || empty($user->username)) {
+            return false;
+        }
+
+        $configured = (string) config('constants.special_sale_view_user', '');
+        if ($configured === '') {
+            return false;
+        }
+
+        $usernames = array_filter(array_map(function ($value) {
+            return strtolower(trim($value));
+        }, explode(',', $configured)));
+
+        return in_array(strtolower($user->username), $usernames, true);
+    }
+
+    public function getSaleDecreasePercentage()
+    {
+        $percentage = config('constants.sale_decrease_percentage', 0);
+        if (! is_numeric($percentage)) {
+            return 0.0;
+        }
+
+        return max(0, min(100, (float) $percentage));
+    }
+
+    public function adjustSaleDisplayAmount($amount, $user = null)
+    {
+        if (! is_numeric($amount) || ! $this->isSpecialSaleViewUser($user)) {
+            return $amount;
+        }
+
+        $percentage = $this->getSaleDecreasePercentage();
+        if ($percentage <= 0) {
+            return (float) $amount;
+        }
+
+        $adjusted = (float) $amount * ((100 - $percentage) / 100);
+
+        return round(max(0, $adjusted), 4);
+    }
+
+    public function adjustSaleDisplayData($data, array $fields = [])
+    {
+        if (! $this->isSpecialSaleViewUser()) {
+            return $data;
+        }
+
+        $fields = empty($fields) ? $this->saleDisplayAmountFields : $fields;
+
+        if (is_array($data)) {
+            foreach ($fields as $field) {
+                if (array_key_exists($field, $data) && is_numeric($data[$field])) {
+                    $data[$field] = $this->adjustSaleDisplayAmount($data[$field]);
+                }
+            }
+
+            return $data;
+        }
+
+        if (is_object($data)) {
+            foreach ($fields as $field) {
+                if (isset($data->{$field}) && is_numeric($data->{$field})) {
+                    $data->{$field} = $this->adjustSaleDisplayAmount($data->{$field});
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    public function formatSaleCurrency($amount, $add_symbol = true, $business_details = null)
+    {
+        return $this->num_f($this->adjustSaleDisplayAmount($amount), $add_symbol, $business_details);
     }
 
     /**

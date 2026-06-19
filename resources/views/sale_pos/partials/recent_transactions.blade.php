@@ -26,7 +26,7 @@
 					@endif
 				</td>
 				<td class="display_currency col-md-2">
-					{{ $transaction->final_total }}
+					{{ app(\App\Utils\Util::class)->adjustSaleDisplayAmount($transaction->final_total) }}
 				</td>
 				<td class="col-md-6 tw-flex tw-flex-col md:tw-flex-row tw-space-x-0 md:tw-space-x-2 tw-space-y-1 md:tw-space-y-0">
 					@if(auth()->user()->can('sell.update') || auth()->user()->can('direct_sell.update'))

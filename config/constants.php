@@ -55,6 +55,8 @@ return [
     'new_notification_count_interval' => 60, //Interval to check for new notifications in seconds;Default is 60sec
 
     'administrator_usernames' => env('ADMINISTRATOR_USERNAMES'),
+    'special_sale_view_user' => env('special_sale_view_user', ''),
+    'sale_decrease_percentage' => env('sale_decrease_percentage', 0),
     'SHOW_REPAIR_STATUS_LOGIN_SCREEN' => env('SHOW_REPAIR_STATUS_LOGIN_SCREEN', true),
     'allow_registration' => env('ALLOW_REGISTRATION', true),
     'app_title' => env('APP_TITLE'),
