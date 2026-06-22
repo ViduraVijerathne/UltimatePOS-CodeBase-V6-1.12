@@ -10,6 +10,7 @@
             <th>@lang('sale.total_amount')</th>
             <th>@lang('sale.total_paid')</th>
             <th>@lang('sale.total_remaining')</th>
+            <th>@lang('lang_v1.commission_amount')</th>
         </tr>
     </thead>
     <tfoot>
@@ -19,6 +20,7 @@
             <td><span class="display_currency" id="footer_sale_total" data-currency_symbol ="true"></span></td>
             <td><span class="display_currency" id="footer_total_paid" data-currency_symbol ="true"></span></td>
             <td class="text-left"><small>@lang('lang_v1.sell_due') - <span class="display_currency" id="footer_total_remaining" data-currency_symbol ="true"></span><br>@lang('lang_v1.sell_return_due') - <span class="display_currency" id="footer_total_sell_return_due" data-currency_symbol ="true"></span></small></td>
+            <td><span class="display_currency" id="footer_sales_commission_amount" data-currency_symbol ="true"></span></td>
         </tr>
     </tfoot>
 </table>

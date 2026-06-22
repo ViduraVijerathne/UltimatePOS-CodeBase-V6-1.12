@@ -23,6 +23,11 @@ $(document).ready(function() {
         initialize_printer();
     }
 
+    toggle_commission_override();
+    $(document).on('change', '#commission_agent', function() {
+        toggle_commission_override();
+    });
+
     $('select#select_location_id').change(function() {
         reset_pos_form();
 
@@ -1648,6 +1653,23 @@ function set_payment_type_dropdown() {
                 }
             }
         });
+    }
+}
+
+function toggle_commission_override() {
+    var $commission_agent = $('#commission_agent');
+    var $commission_override_box = $('#commission_override_box');
+
+    if ($commission_override_box.length === 0) {
+        return;
+    }
+
+    if ($commission_agent.length > 0 && $commission_agent.val()) {
+        $commission_override_box.removeClass('hide');
+    } else {
+        $commission_override_box.addClass('hide');
+        $('#commission_type').val('percentage');
+        $('#commission_amount').val('');
     }
 }
 

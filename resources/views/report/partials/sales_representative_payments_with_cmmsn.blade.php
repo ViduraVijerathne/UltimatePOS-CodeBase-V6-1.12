@@ -8,6 +8,7 @@
                 <th>@lang('contact.customer')</th>
                 <th>@lang('lang_v1.payment_method')</th>
                 <th>@lang('sale.sale')</th>
+                <th>@lang('lang_v1.commission_amount')</th>
                 <th>@lang('messages.action')</th>
             </tr>
         </thead>
@@ -15,7 +16,9 @@
             <tr class="bg-gray font-17 footer-total text-center">
                 <td colspan="2"><strong>@lang('sale.total'):</strong></td>
                 <td><span class="display_currency" id="footer_total_amount" data-currency_symbol ="true"></span></td>
-                <td colspan="4"></td>
+                <td colspan="3"></td>
+                <td><span class="display_currency" id="footer_total_commission_amount" data-currency_symbol ="true"></span></td>
+                <td></td>
             </tr>
         </tfoot>
     </table>

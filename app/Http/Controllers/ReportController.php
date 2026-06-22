@@ -1347,28 +1347,24 @@ class ReportController extends Controller
 
             $commsn_calculation_type = empty($pos_settings['cmmsn_calculation_type']) || $pos_settings['cmmsn_calculation_type'] == 'invoice_value' ? 'invoice_value' : $pos_settings['cmmsn_calculation_type'];
 
-            $commission_percentage = User::find($commission_agent)->cmmsn_percent;
+            $commission_percentage = User::find($commission_agent)->cmmsn_percent ?? 0;
 
             if ($commsn_calculation_type == 'payment_received') {
                 $payment_details = $this->transactionUtil->getTotalPaymentWithCommission($business_id, $start_date, $end_date, $location_id, $commission_agent);
 
-                //Get Commision
-                $total_commission = $commission_percentage * $payment_details['total_payment_with_commission'] / 100;
-
                 return ['total_payment_with_commission' => $payment_details['total_payment_with_commission'] ?? 0,
-                    'total_commission' => $total_commission,
+                    'total_commission' => $payment_details['total_commission'] ?? 0,
                     'commission_percentage' => $commission_percentage,
+                    'has_commission_override' => $payment_details['has_commission_override'] ?? false,
                 ];
             }
 
             $sell_details = $this->transactionUtil->getTotalSellCommission($business_id, $start_date, $end_date, $location_id, $commission_agent);
 
-            //Get Commision
-            $total_commission = $commission_percentage * $sell_details['total_sales_with_commission'] / 100;
-
             return ['total_sales_with_commission' => $sell_details['total_sales_with_commission'],
-                'total_commission' => $total_commission,
+                'total_commission' => $sell_details['total_commission'] ?? 0,
                 'commission_percentage' => $commission_percentage,
+                'has_commission_override' => $sell_details['has_commission_override'] ?? false,
             ];
         }
     }
@@ -2475,6 +2471,7 @@ class ReportController extends Controller
             })
                 ->leftjoin('contacts as c', 't.contact_id', '=', 'c.id')
                 ->leftjoin('customer_groups AS CG', 'c.customer_group_id', '=', 'CG.id')
+                ->leftjoin('users AS CA', 't.commission_agent', '=', 'CA.id')
 
             
             //     DB::raw("IF(transaction_payments.transaction_id IS NULL, 
@@ -2527,6 +2524,10 @@ class ReportController extends Controller
                     'transaction_payments.document',
                     'transaction_payments.transaction_no',
                     't.invoice_no',
+                    't.final_total',
+                    't.commission_type',
+                    't.commission_amount',
+                    'CA.cmmsn_percent',
                     'c.contact_id',
                     't.id as transaction_id',
                     'cheque_number',
@@ -2600,9 +2601,15 @@ class ReportController extends Controller
                     return '<span class="paid-amount" data-orig-value="'.$amount.'" 
                     >'.$this->transactionUtil->num_f($amount, true).'</span>';
                 })
+                ->addColumn('sales_commission_amount', function ($row) {
+                    $amount = $row->is_return == 1 ? -1 * $row->amount : $row->amount;
+                    $commission_amount = $this->transactionUtil->getSaleCommissionAmount($row, $amount, $amount);
+
+                    return '<span class="commission-amount" data-orig-value="'.$commission_amount.'">'.$this->transactionUtil->num_f($commission_amount, true).'</span>';
+                })
                 ->addColumn('action', '<button type="button" class="tw-dw-btn tw-dw-btn-xs tw-dw-btn-outline  tw-dw-btn-primary view_payment" data-href="{{ action([\App\Http\Controllers\TransactionPaymentController::class, \'viewPayment\'], [$DT_RowId]) }}">@lang("messages.view")
                     </button> @if(!empty($document))<a href="{{asset("/uploads/documents/" . $document)}}" class="tw-dw-btn tw-dw-btn-xs tw-dw-btn-outline  tw-dw-btn-accent" download=""><i class="fa fa-download"></i> @lang("purchase.download_document")</a>@endif')
-                ->rawColumns(['invoice_no', 'amount', 'method', 'action', 'customer'])
+                ->rawColumns(['invoice_no', 'amount', 'sales_commission_amount', 'method', 'action', 'customer'])
                 ->make(true);
         }
         $business_locations = BusinessLocation::forDropdown($business_id);

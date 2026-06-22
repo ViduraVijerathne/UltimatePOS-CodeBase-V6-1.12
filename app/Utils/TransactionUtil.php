@@ -57,6 +57,8 @@ class TransactionUtil extends Util
             $pay_term_number = $contact->pay_term_number;
             $pay_term_type = $contact->pay_term_type;
         }
+        $commission_override = $this->normalizeSaleCommissionOverrideInput($input, $uf_data);
+
         $transaction = Transaction::create([
             'business_id' => $business_id,
             'location_id' => $input['location_id'],
@@ -85,6 +87,8 @@ class TransactionUtil extends Util
             'custom_field_4' => ! empty($input['custom_field_4']) ? $input['custom_field_4'] : null,
             'is_direct_sale' => ! empty($input['is_direct_sale']) ? $input['is_direct_sale'] : 0,
             'commission_agent' => $input['commission_agent'] ?? null,
+            'commission_type' => $commission_override['commission_type'],
+            'commission_amount' => $commission_override['commission_amount'],
             'is_quotation' => isset($input['is_quotation']) ? $input['is_quotation'] : 0,
             'shipping_details' => isset($input['shipping_details']) ? $input['shipping_details'] : null,
             'shipping_address' => isset($input['shipping_address']) ? $input['shipping_address'] : null,
@@ -187,6 +191,8 @@ class TransactionUtil extends Util
             $pay_term_type = $contact->pay_term_type;
         }
 
+        $commission_override = $this->normalizeSaleCommissionOverrideInput($input, $uf_data);
+
         $update_date = [
             'status' => $input['status'],
             'invoice_no' => ! empty($input['invoice_no']) ? $input['invoice_no'] : $invoice_no,
@@ -207,6 +213,8 @@ class TransactionUtil extends Util
             'custom_field_3' => ! empty($input['custom_field_3']) ? $input['custom_field_3'] : null,
             'custom_field_4' => ! empty($input['custom_field_4']) ? $input['custom_field_4'] : null,
             'commission_agent' => $input['commission_agent'],
+            'commission_type' => $commission_override['commission_type'],
+            'commission_amount' => $commission_override['commission_amount'],
             'is_quotation' => isset($input['is_quotation']) ? $input['is_quotation'] : 0,
             'sub_status' => ! empty($input['sub_status']) ? $input['sub_status'] : null,
             'shipping_details' => isset($input['shipping_details']) ? $input['shipping_details'] : null,
@@ -4149,6 +4157,62 @@ class TransactionUtil extends Util
         return $details->stock;
     }
 
+    public function normalizeSaleCommissionOverrideInput($input, $uf_data = true)
+    {
+        $output = [
+            'commission_type' => null,
+            'commission_amount' => null,
+        ];
+
+        if (empty($input['commission_agent']) || ! array_key_exists('commission_amount', $input) || $input['commission_amount'] === '') {
+            return $output;
+        }
+
+        $commission_type = ! empty($input['commission_type']) ? $input['commission_type'] : 'percentage';
+        if (! in_array($commission_type, ['percentage', 'fixed'])) {
+            $commission_type = 'percentage';
+        }
+
+        $commission_amount = $uf_data ? $this->num_uf($input['commission_amount']) : $input['commission_amount'];
+        $commission_amount = max((float) $commission_amount, 0);
+        if ($commission_type == 'percentage') {
+            $commission_amount = min($commission_amount, 100);
+        }
+
+        $output['commission_type'] = $commission_type;
+        $output['commission_amount'] = $commission_amount;
+
+        return $output;
+    }
+
+    public function getSaleCommissionAmount($transaction, $base_amount = null, $payment_amount = null)
+    {
+        $base_amount = is_null($base_amount) ? (float) ($transaction->final_total ?? 0) : (float) $base_amount;
+        $payment_amount = is_null($payment_amount) ? null : (float) $payment_amount;
+
+        if (! empty($transaction->commission_type) && ! is_null($transaction->commission_amount)) {
+            if ($transaction->commission_type == 'fixed') {
+                $fixed_commission = max((float) $transaction->commission_amount, 0);
+
+                if (! is_null($payment_amount)) {
+                    $final_total = (float) ($transaction->final_total ?? 0);
+
+                    return $final_total > 0 ? ($fixed_commission * $payment_amount / $final_total) : 0;
+                }
+
+                return $fixed_commission;
+            }
+
+            $commission_percentage = min(max((float) $transaction->commission_amount, 0), 100);
+
+            return $commission_percentage * $base_amount / 100;
+        }
+
+        $commission_percentage = min(max((float) ($transaction->cmmsn_percent ?? 0), 0), 100);
+
+        return $commission_percentage * $base_amount / 100;
+    }
+
     /**
      * Gives the total sell commission for a commission agent within the date range passed
      *
@@ -4161,12 +4225,28 @@ class TransactionUtil extends Util
      */
     public function getTotalSellCommission($business_id, $start_date = null, $end_date = null, $location_id = null, $commission_agent = null)
     {
-        //Query to sum total sell without line tax and order tax
-        $query = TransactionSellLine::leftjoin('transactions as t', 'transaction_sell_lines.transaction_id', '=', 't.id')
+        $line_total_subquery = TransactionSellLine::select(
+                'transaction_id',
+                DB::raw('SUM((quantity - quantity_returned) * unit_price) as sell_line_total')
+            )
+            ->groupBy('transaction_id');
+
+        $query = Transaction::from('transactions as t')
+                            ->leftJoinSub($line_total_subquery, 'sell_line_totals', function ($join) {
+                                $join->on('sell_line_totals.transaction_id', '=', 't.id');
+                            })
+                            ->leftJoin('users as ca', 't.commission_agent', '=', 'ca.id')
                             ->where('t.business_id', $business_id)
                             ->where('t.type', 'sell')
                             ->where('t.status', 'final')
-                            ->select(DB::raw('SUM( (transaction_sell_lines.quantity - transaction_sell_lines.quantity_returned) * transaction_sell_lines.unit_price ) as final_total'));
+                            ->select(
+                                't.id',
+                                't.final_total',
+                                't.commission_type',
+                                't.commission_amount',
+                                'ca.cmmsn_percent',
+                                DB::raw('COALESCE(sell_line_totals.sell_line_total, 0) as final_total_for_commission')
+                            );
 
         //Check for permitted locations of a user
         $permitted_locations = auth()->user()->permitted_locations();
@@ -4189,7 +4269,13 @@ class TransactionUtil extends Util
 
         $sell_details = $query->get();
 
-        $output['total_sales_with_commission'] = $sell_details->sum('final_total');
+        $output['total_sales_with_commission'] = $sell_details->sum('final_total_for_commission');
+        $output['total_commission'] = $sell_details->sum(function ($transaction) {
+            return $this->getSaleCommissionAmount($transaction, $transaction->final_total_for_commission);
+        });
+        $output['has_commission_override'] = $sell_details->contains(function ($transaction) {
+            return ! empty($transaction->commission_type) && ! is_null($transaction->commission_amount);
+        });
 
         return $output;
     }
@@ -4198,10 +4284,19 @@ class TransactionUtil extends Util
     {
         $query = TransactionPayment::join('transactions as t',
             'transaction_payments.transaction_id', '=', 't.id')
+                            ->leftJoin('users as ca', 't.commission_agent', '=', 'ca.id')
                             ->where('t.business_id', $business_id)
                             ->where('t.type', 'sell')
                             ->where('t.status', 'final')
-                            ->select(DB::raw('SUM(IF( is_return = 0, amount, amount*-1)) as total_paid'));
+                            ->select(
+                                'transaction_payments.id',
+                                'transaction_payments.amount',
+                                'transaction_payments.is_return',
+                                't.final_total',
+                                't.commission_type',
+                                't.commission_amount',
+                                'ca.cmmsn_percent'
+                            );
 
         //Check for permitted locations of a user
         $permitted_locations = auth()->user()->permitted_locations();
@@ -4222,9 +4317,19 @@ class TransactionUtil extends Util
             $query->where('t.commission_agent', $commission_agent);
         }
 
-        $payment_details = $query->first();
+        $payment_details = $query->get();
 
-        $output['total_payment_with_commission'] = $payment_details->total_paid;
+        $output['total_payment_with_commission'] = $payment_details->sum(function ($payment) {
+            return $payment->is_return == 1 ? -1 * $payment->amount : $payment->amount;
+        });
+        $output['total_commission'] = $payment_details->sum(function ($payment) {
+            $amount = $payment->is_return == 1 ? -1 * $payment->amount : $payment->amount;
+
+            return $this->getSaleCommissionAmount($payment, $amount, $amount);
+        });
+        $output['has_commission_override'] = $payment_details->contains(function ($payment) {
+            return ! empty($payment->commission_type) && ! is_null($payment->commission_amount);
+        });
 
         return $output;
     }
@@ -5320,6 +5425,7 @@ class TransactionUtil extends Util
         } else {
             // Full query with all the expensive joins and subqueries
             $sells->leftJoin('users as u', 'transactions.created_by', '=', 'u.id')
+                ->leftJoin('users as ca', 'transactions.commission_agent', '=', 'ca.id')
                 ->leftJoin('users as ss', 'transactions.res_waiter_id', '=', 'ss.id')
                 ->leftJoin('users as dp', 'transactions.delivery_person', '=', 'dp.id')
                 ->leftJoin('res_tables as tables', 'transactions.res_table_id', '=', 'tables.id')
@@ -5338,8 +5444,7 @@ class TransactionUtil extends Util
                 // Pre-aggregate sell line totals per transaction and join once
                 ->leftJoinSub(
                     DB::table('transaction_sell_lines as tsl')
-                        ->selectRaw('tsl.transaction_id, COUNT(DISTINCT tsl.id) as total_items, SUM(tsl.quantity - tsl.so_quantity_invoiced) as so_qty_remaining')
-                        ->whereNull('tsl.parent_sell_line_id')
+                        ->selectRaw('tsl.transaction_id, COUNT(DISTINCT IF(tsl.parent_sell_line_id IS NULL, tsl.id, NULL)) as total_items, SUM(IF(tsl.parent_sell_line_id IS NULL, tsl.quantity - tsl.so_quantity_invoiced, 0)) as so_qty_remaining, SUM((tsl.quantity - tsl.quantity_returned) * tsl.unit_price) as final_total_for_commission')
                         ->groupBy('tsl.transaction_id'),
                     'tsl_agg',
                     function ($join) {
@@ -5360,6 +5465,9 @@ class TransactionUtil extends Util
                     'transactions.status',
                     'transactions.payment_status',
                     'transactions.final_total',
+                    'transactions.commission_type',
+                    'transactions.commission_amount',
+                    'ca.cmmsn_percent',
                     'transactions.tax_amount',
                     'transactions.discount_amount',
                     'transactions.discount_type',
@@ -5397,6 +5505,7 @@ class TransactionUtil extends Util
                     'tos.name as types_of_service_name',
                     'transactions.service_custom_field_1',
                     DB::raw('COALESCE(tsl_agg.total_items, 0) as total_items'),
+                    DB::raw('COALESCE(tsl_agg.final_total_for_commission, 0) as final_total_for_commission'),
                     DB::raw("CONCAT(COALESCE(ss.surname, ''),' ',COALESCE(ss.first_name, ''),' ',COALESCE(ss.last_name,'')) as waiter"),
                     'tables.name as table_name',
                     DB::raw('COALESCE(tsl_agg.so_qty_remaining, 0) as so_qty_remaining'),

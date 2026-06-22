@@ -414,6 +414,11 @@ class SellController extends Controller
 
                     return $total_remaining_html;
                 })
+                ->addColumn('sales_commission_amount', function ($row) {
+                    $commission_amount = $this->transactionUtil->getSaleCommissionAmount($row, $row->final_total_for_commission);
+
+                    return '<span class="sales-commission-amount" data-orig-value="' . $commission_amount . '">' . $this->transactionUtil->num_f($commission_amount, true) . '</span>';
+                })
                 ->addColumn('return_due', function ($row) {
                     $return_due_html = '';
                     if (!empty($row->return_exists)) {
@@ -527,7 +532,7 @@ class SellController extends Controller
                         }
                     }, ]);
 
-            $rawColumns = ['final_total', 'action', 'total_paid', 'total_remaining', 'payment_status', 'invoice_no', 'discount_amount', 'tax_amount', 'total_before_tax', 'shipping_status', 'types_of_service_name', 'payment_methods', 'return_due', 'conatct_name', 'status', 'zatca_status'];
+            $rawColumns = ['final_total', 'action', 'total_paid', 'total_remaining', 'sales_commission_amount', 'payment_status', 'invoice_no', 'discount_amount', 'tax_amount', 'total_before_tax', 'shipping_status', 'types_of_service_name', 'payment_methods', 'return_due', 'conatct_name', 'status', 'zatca_status'];
 
             return $datatable->rawColumns($rawColumns)
                       ->skipTotalRecords()

@@ -466,11 +466,15 @@ $(document).ready(function() {
                     { data: 'customer', orderable: false, searchable: false },
                     { data: 'method', name: 'method' },
                     { data: 'invoice_no', name: 't.invoice_no' },
+                    { data: 'sales_commission_amount', orderable: false, searchable: false },
                     { data: 'action', orderable: false, searchable: false },
                 ],
                 fnDrawCallback: function(oSettings) {
                     var total_amount = sum_table_col($('#sr_payments_with_commission_table'), 'paid-amount');
                     $('#footer_total_amount').text(total_amount);
+                    $('#footer_total_commission_amount').text(
+                        sum_table_col($('#sr_payments_with_commission_table'), 'commission-amount')
+                    );
                     __currency_convert_recursively($('#sr_payments_with_commission_table'));
                 }
             });
@@ -615,6 +619,7 @@ $(document).ready(function() {
                 { data: 'final_total', name: 'final_total' },
                 { data: 'total_paid', name: 'total_paid' },
                 { data: 'total_remaining', name: 'total_remaining' },
+                { data: 'sales_commission_amount', orderable: false, searchable: false },
             ],
             columnDefs: [
                 {
@@ -636,6 +641,9 @@ $(document).ready(function() {
                 );
                 $('#footer_total_sell_return_due').text(
                     sum_table_col($('#sr_sales_with_commission_table'), 'sell_return_due')
+                );
+                $('#footer_sales_commission_amount').text(
+                    sum_table_col($('#sr_sales_with_commission_table'), 'sales-commission-amount')
                 );
 
                 $('#footer_payment_status_count ').html(
@@ -1723,7 +1731,13 @@ function salesRepresentativeTotalCommission() {
                     '<div style="padding-right:15px; display: inline-block">' +
                     __currency_trans_from_en(data.total_commission, true) +
                     '</div>';
-                if (data.commission_percentage != 0) {
+                if (data.has_commission_override) {
+                    var dynamic_commission_label =
+                        typeof LANG.dynamic_commission !== 'undefined'
+                            ? LANG.dynamic_commission
+                            : 'Dynamic invoice commissions';
+                    str += ' <small>(' + dynamic_commission_label + ')</small>';
+                } else if (data.commission_percentage != 0) {
                     if (data.total_sales_with_commission) {
                         str +=
                             ' <small>(' +

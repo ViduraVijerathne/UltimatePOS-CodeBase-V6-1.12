@@ -199,6 +199,7 @@
 								$commission_agent, null, ['class' => 'form-control select2', 'id' => 'commission_agent', 'required' => $is_commission_agent_required]); !!}
 					</div>
 				</div>
+				@include('sale_pos.partials.commission_override', ['commission_override_class' => 'col-sm-3'])
 				@endif
 				<div class="@if(!empty($commission_agent)) col-sm-3 @else col-sm-4 @endif">
 					<div class="form-group">
